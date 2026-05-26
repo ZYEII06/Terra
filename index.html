@@ -1,0 +1,1637 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Terra — 教科 × AI × SDGs</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Syne:wght@400;700;800&family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <style>
+    :root {
+      --bg:#020810;--bg2:#060f1e;--surface:#0a1628;--surface2:#0f1f35;
+      --border:rgba(99,179,237,0.15);--accent:#63b3ed;--accent2:#4fd1c5;
+      --accent3:#f6ad55;--text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
+      --glow:rgba(99,179,237,0.3);
+      --sdg1:#E5243B;--sdg2:#DDA63A;--sdg3:#4C9F38;--sdg4:#C5192D;
+      --sdg5:#FF3A21;--sdg6:#26BDE2;--sdg7:#FCC30B;--sdg8:#A21942;
+      --sdg9:#FD6925;--sdg10:#DD1367;--sdg11:#FD9D24;--sdg12:#BF8B2E;
+      --sdg13:#3F7E44;--sdg14:#0A97D9;--sdg15:#56C02B;--sdg16:#00689D;--sdg17:#19486A;
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html{scroll-behavior:smooth;}
+    body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC','Space Grotesk',sans-serif;overflow-x:hidden;
+      cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" style="font-size: 24px;"><text y="24">🌍</text></svg>'), auto;}
+    ::-webkit-scrollbar{width:4px;}
+
+    /* Button hover cursor */
+    button:hover,
+    .nav-logo:hover,
+    .hero-cta:hover,
+    .quick-q:hover,
+    .option:hover {
+      cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" style="font-size: 24px;"><text y="24">🚀</text></svg>'), auto;
+    }
+    ::-webkit-scrollbar-track{background:var(--bg);}
+    ::-webkit-scrollbar-thumb{background:var(--accent);border-radius:2px;}
+
+    /* ── NAV ── */
+    nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:16px 40px;
+      display:flex;align-items:center;justify-content:space-between;
+      background:rgba(2,8,16,0.85);backdrop-filter:blur(20px);
+      border-bottom:1px solid var(--border);}
+    .nav-toggle{display:none;background:none;border:none;color:var(--text);font-size:1.5rem;cursor:pointer;z-index:1001;padding:0;}
+    .nav-logo, .footer-logo-wrap{display:flex;align-items:center;gap:12px;font-family:'Syne',sans-serif;font-weight:800;letter-spacing:0.02em;text-decoration:none;cursor:pointer;transition:transform 0.3s ease;}
+    .nav-logo{font-size:1.3rem;}
+    .logo-text{background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+    .logo-icon{display:flex;align-items:center;justify-content:center;width:30px;height:30px;color:var(--accent);animation:rotateEarth 20s linear infinite;filter:drop-shadow(0 0 10px var(--glow));position:relative;}
+    .logo-icon::after{content:'';position:absolute;width:100%;height:100%;background:var(--accent);filter:blur(15px);opacity:0.15;z-index:-1;}
+    .nav-logo:hover .logo-icon {
+      animation-duration: 4s;
+      filter: drop-shadow(0 0 15px var(--accent));
+    }
+    .nav-logo:hover{transform:scale(1.05);}
+    .nav-logo:hover .logo-text{filter:brightness(1.2);}
+    @keyframes rotateEarth{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+    .nav-links{display:flex;gap:32px;}
+    .nav-links a{color:var(--text2);font-size:0.85rem;text-decoration:none;letter-spacing:0.05em;transition:color 0.2s;}
+    .nav-links a:hover{color:var(--accent);}
+
+    /* ── HERO ── */
+    #hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:100px 40px 60px;}
+    #hero-canvas{position:absolute;inset:0;z-index:0;opacity:0.6;}
+    .hero-content{position:relative;z-index:1;text-align:center;max-width:800px;}
+    .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(99,179,237,0.1);border:1px solid rgba(99,179,237,0.3);border-radius:100px;padding:6px 16px;font-size:0.75rem;letter-spacing:0.1em;color:var(--accent);margin-bottom:32px;text-transform:uppercase;}
+    .hero-badge::before{content:'';width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 2s infinite;}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.5;transform:scale(1.5);}}
+    h1{font-family:'Syne',sans-serif;font-size:clamp(2.5rem,6vw,5rem);font-weight:800;line-height:1.05;margin-bottom:24px;}
+    h1 span{background:linear-gradient(135deg,var(--accent) 0%,var(--accent2) 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+    .hero-sub{font-size:1.1rem;color:var(--text2);line-height:1.7;margin-bottom:48px;max-width:560px;margin-left:auto;margin-right:auto;}
+    .hero-cta{display:inline-flex;align-items:center;gap:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#010409;padding:16px 36px;border-radius:100px;font-weight:700;font-size:1rem;cursor:pointer;border:none;transition:transform 0.2s,box-shadow 0.2s;text-decoration:none;box-shadow: 0 10px 20px -5px rgba(56,189,248,0.4);}
+    .hero-cta:hover{transform:translateY(-2px);box-shadow:0 20px 40px rgba(99,179,237,0.3);}
+    .hero-stats{display:flex;gap:48px;justify-content:center;margin-top:64px;position:relative;z-index:1;}
+    .stat{text-align:center;}
+    .stat-num{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;color:var(--accent);}
+    .stat-label{font-size:0.8rem;color:var(--text3);margin-top:4px;}
+
+    /* ── SECTION BASE ── */
+    section{padding:100px 40px;}
+    .section-tag{font-size:0.75rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--accent);margin-bottom:16px;}
+    .section-title{font-family:'Syne',sans-serif;font-size:clamp(1.8rem,3.5vw,3rem);font-weight:800;line-height:1.1;margin-bottom:16px;}
+    .section-desc{color:var(--text2);font-size:1rem;line-height:1.7;max-width:560px;margin-bottom:48px;}
+
+    /* ── ASSESSMENT ── */
+    #assessment{background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border);}
+    .assessment-inner{max-width:700px;margin:0 auto;}
+    .question-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px;margin-bottom:24px;transition:border-color 0.3s;}
+    .question-card:focus-within{border-color:var(--accent);}
+    .question-num{font-size:0.75rem;letter-spacing:0.1em;color:var(--accent);margin-bottom:12px;text-transform:uppercase;}
+    .question-text{font-size:1.05rem;font-weight:500;margin-bottom:20px;line-height:1.5;}
+    .options{display:flex;flex-direction:column;gap:10px;}
+    .option{display:flex;align-items:center;gap:12px;background:var(--surface2);border:1px solid transparent;border-radius:10px;padding:12px 16px;cursor:pointer;transition:all 0.2s;font-size:0.95rem;}
+    .option:hover{border-color:var(--accent);background:rgba(99,179,237,0.05);}
+    .option input{display:none;}
+    .option.selected{border-color:var(--accent);background:rgba(99,179,237,0.1);color:var(--accent);}
+    .option-dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--text3);flex-shrink:0;transition:all 0.2s;}
+    .option.selected .option-dot{border-color:var(--accent);background:var(--accent);}
+    .submit-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:12px;color:#020810;font-weight:700;font-size:1rem;cursor:pointer;transition:opacity 0.2s,transform 0.2s;font-family:inherit;}
+    .submit-btn:hover{opacity:0.9;transform:translateY(-1px);}
+    .submit-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+    #path-result{display:none;background:var(--surface);border:1px solid var(--accent);border-radius:20px;padding:40px;margin-top:32px;position:relative;overflow:hidden;}
+    #path-result::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at top left,rgba(99,179,237,0.08),transparent 60%);pointer-events:none;}
+    .path-label{font-size:0.75rem;letter-spacing:0.1em;color:var(--accent2);text-transform:uppercase;margin-bottom:8px;}
+    .path-level{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;margin-bottom:16px;}
+    .path-desc{color:var(--text2);line-height:1.7;margin-bottom:24px;font-size:0.95rem;}
+    .path-steps{display:flex;flex-direction:column;gap:10px;}
+    .path-step{display:flex;align-items:center;gap:12px;background:var(--surface2);border-radius:10px;padding:12px 16px;font-size:0.9rem;}
+    .step-num{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:700;color:#020810;flex-shrink:0;}
+    .dots span{display:inline-block;width:6px;height:6px;background:var(--accent);border-radius:50%;animation:bounce 1.2s infinite;margin:0 2px;}
+    .dots span:nth-child(2){animation-delay:0.2s;}
+    .dots span:nth-child(3){animation-delay:0.4s;}
+    @keyframes bounce{0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-8px);}}
+
+    /* ── SDGs GRID ── */
+    #sdgs{background:var(--bg);}
+    .sdgs-container{max-width:1100px;margin:0 auto;}
+    .sdgs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;}
+    .sdg-card{border-radius:12px;padding:20px 16px;cursor:pointer;transition:transform 0.2s,box-shadow 0.2s;position:relative;overflow:hidden;aspect-ratio:1;display:flex;flex-direction:column;justify-content:space-between;}
+    .sdg-card:hover{transform:translateY(-4px) scale(1.02);}
+    .sdg-num{font-family:'Syne',sans-serif;font-size:2rem;font-weight:800;opacity:0.9;}
+    .sdg-name{font-size:0.75rem;font-weight:600;line-height:1.3;}
+
+    /* ── SDG MODAL ── */
+    .sdg-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);z-index:2000;align-items:center;justify-content:center;}
+    .sdg-modal-overlay.active{display:flex;}
+    .sdg-modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:0;max-width:720px;width:95%;position:relative;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;}
+    .modal-close{position:absolute;top:16px;right:16px;background:var(--surface2);border:none;color:var(--text2);cursor:pointer;width:36px;height:36px;border-radius:50%;font-size:1.2rem;display:flex;align-items:center;justify-content:center;transition:color 0.2s;z-index:10;}
+    .modal-close:hover{color:var(--text);}
+    .modal-header{padding:40px 40px 24px;flex-shrink:0;background:linear-gradient(to bottom, var(--surface2), var(--surface));transition: padding 0.3s;}
+    .modal-num{font-family:'Syne',sans-serif;font-size:2.5rem;font-weight:800;margin-bottom:4px;}
+    .modal-name{font-size:1.2rem;font-weight:600;margin-bottom:10px;}
+    .modal-desc{color:var(--text2);line-height:1.8;font-size:0.95rem;max-width:100%;}
+
+    /* SDG TABS */
+    .sdg-tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);padding:0 32px;flex-shrink:0;overflow-x:auto;background:rgba(2,8,16,0.3);}
+    .sdg-tab{padding:16px 20px;font-size:0.85rem;font-weight:600;color:var(--text3);cursor:pointer;border:none;border-bottom:3px solid transparent;white-space:nowrap;transition:all 0.3s ease;background:none;font-family:inherit;display:flex;align-items:center;gap:8px;}
+    .sdg-tab:hover{color:var(--text2);background:rgba(255,255,255,0.03);}
+    .sdg-tab.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(99,179,237,0.05);}
+    .sdg-tab-content{flex:1;overflow-y:auto;padding:32px 40px 40px;}
+    .tab-panel{display:none;}
+    .tab-panel.active{display:block;}
+
+    /* AI dimension panels */
+    .ai-panel-loading{display:flex;align-items:center;gap:12px;color:var(--text2);font-size:0.9rem;padding:24px 0;}
+    .ai-generated-content{line-height:1.8;font-size:0.9rem;color:var(--text2);}
+    .ai-generated-content h4{color:var(--text);font-size:1rem;margin:16px 0 8px;font-family:'Syne',sans-serif;}
+    .ai-generated-content strong{color:var(--accent);}
+
+    /* Data viz blocks */
+    .data-blocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:16px 0;}
+    .data-block{background:linear-gradient(145deg, var(--surface2), var(--surface));border:1px solid var(--border);border-radius:16px;padding:20px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:transform 0.2s;}
+    .data-block:hover{transform:translateY(-2px);border-color:var(--accent3);}
+    .data-block-num{font-family:'Syne',sans-serif;font-size:1.6rem;font-weight:800;color:var(--accent3);}
+    .data-block-label{font-size:0.75rem;color:var(--text2);margin-top:8px;line-height:1.4;font-weight:500;}
+    
+    @keyframes cardSlideIn {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .connection-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+    .connection-tag{background:rgba(99,179,237,0.1);border:1px solid rgba(99,179,237,0.3);border-radius:100px;padding:4px 12px;font-size:0.75rem;color:var(--accent);}
+    .action-list{list-style:none;display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+    .action-list li{display:flex;align-items:flex-start;gap:10px;font-size:0.88rem;line-height:1.5;color:var(--text2);}
+    .action-list li::before{content:'→';color:var(--accent2);flex-shrink:0;margin-top:1px;}
+
+    /* MAP */
+    #map-section{background:var(--bg2);}
+    .map-container{max-width:1100px;margin:0 auto;}
+    #refugee-map{height:500px;border-radius:16px;border:1px solid var(--border);overflow:hidden;}
+    .map-legend{display:flex;gap:24px;margin-top:16px;flex-wrap:wrap;}
+    .legend-item{display:flex;align-items:center;gap:8px;font-size:0.8rem;color:var(--text2);}
+    .legend-dot{width:12px;height:12px;border-radius:50%;}
+
+    /* ── REFUGEE CHAT MODAL ── */
+    .refugee-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);backdrop-filter:blur(12px);z-index:3000;align-items:center;justify-content:center;}
+    .refugee-modal-overlay.active{display:flex;}
+    .refugee-modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;width:95%;max-width:620px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;}
+    .refugee-modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+    .refugee-avatar{display:flex;align-items:center;gap:14px;margin-bottom:8px;}
+    .avatar-circle{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.6rem;flex-shrink:0;border:2px solid;}
+    .avatar-name{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;}
+    .avatar-sub{font-size:0.78rem;color:var(--text2);margin-top:2px;}
+    .refugee-modal-chat{flex:1;overflow-y:auto;padding:16px 24px;display:flex;flex-direction:column;gap:12px;}
+    .chat-bubble{max-width:85%;border-radius:14px;padding:12px 16px;font-size:0.875rem;line-height:1.6;}
+    .chat-bubble.ai{background:var(--surface2);border:1px solid var(--border);align-self:flex-start;}
+    .chat-bubble.user{background:linear-gradient(135deg,rgba(99,179,237,0.2),rgba(79,209,197,0.2));border:1px solid rgba(99,179,237,0.3);align-self:flex-end;text-align:right;}
+    .chat-bubble.thinking{opacity:0.6;font-style:italic;}
+    .refugee-modal-input{padding:16px 24px;border-top:1px solid var(--border);flex-shrink:0;}
+    .refugee-input-row{display:flex;gap:10px;}
+    .refugee-input{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;color:var(--text);font-size:0.875rem;font-family:inherit;resize:none;outline:none;transition:border-color 0.2s;}
+    .refugee-input:focus{border-color:var(--accent);}
+    .refugee-send-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;padding:10px 18px;color:#020810;font-weight:700;cursor:pointer;font-size:0.875rem;white-space:nowrap;transition:opacity 0.2s;}
+    .refugee-send-btn:hover{opacity:0.85;}
+    .refugee-send-btn:disabled{opacity:0.4;cursor:not-allowed;}
+    .quick-questions{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+    .quick-q{background:var(--surface2);border:1px solid var(--border);border-radius:100px;padding:5px 12px;font-size:0.75rem;cursor:pointer;color:var(--text2);transition:all 0.2s;}
+    .quick-q:hover{border-color:var(--accent);color:var(--accent);}
+    .persona-select{display:flex;gap:10px;padding:12px 24px;border-bottom:1px solid var(--border);flex-shrink:0;}
+    .persona-btn{flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:0.8rem;font-family:inherit;transition:all 0.2s;text-align:center;}
+    .persona-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(99,179,237,0.08);}
+    .modal-close-btn{background:var(--surface2);border:none;color:var(--text2);cursor:pointer;width:32px;height:32px;border-radius:50%;font-size:1.1rem;display:flex;align-items:center;justify-content:center;}
+    .modal-close-btn:hover{color:var(--text);}
+
+
+
+    /* ── LANGUAGE TREE ── */
+    #language-tree{background:var(--bg);}
+    .tree-container{max-width:1100px;margin:0 auto;}
+    #tree-canvas-container{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;position:relative;}
+    .tree-info{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:24px;}
+    .tree-stat{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;}
+    .tree-stat-num{font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;color:var(--accent3);}
+    .tree-stat-label{font-size:0.8rem;color:var(--text2);margin-top:4px;}
+
+    /* ── GAMES ── */
+    #games{background:var(--bg2);}
+    .games-container{max-width:1100px;margin:0 auto;}
+    .games-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;}
+    .game-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;cursor:pointer;transition:all 0.2s;position:relative;overflow:hidden;}
+    .game-card:hover{border-color:var(--accent);transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,0.3);}
+    .game-sdg-badge{display:inline-block;padding:4px 12px;border-radius:100px;font-size:0.75rem;font-weight:600;margin-bottom:16px;color:#fff;}
+    .game-title{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:700;margin-bottom:8px;}
+    .game-desc{color:var(--text2);font-size:0.85rem;line-height:1.6;margin-bottom:20px;}
+    .game-btn{display:inline-flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:0.85rem;color:var(--text);cursor:pointer;transition:all 0.2s;font-family:inherit;}
+    .game-btn:hover{border-color:var(--accent);color:var(--accent);}
+    .game-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);backdrop-filter:blur(12px);z-index:3000;align-items:center;justify-content:center;}
+    .game-modal-overlay.active{display:flex;}
+    .game-modal{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px;max-width:640px;width:90%;position:relative;}
+    .game-question{font-size:1.1rem;font-weight:500;line-height:1.6;margin-bottom:24px;}
+    .game-options{display:flex;flex-direction:column;gap:10px;}
+    .game-option{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;cursor:pointer;font-size:0.9rem;transition:all 0.2s;font-family:inherit;color:var(--text);text-align:left;}
+    .game-option:hover{border-color:var(--accent);}
+    .game-option.correct{border-color:#4fd1c5;background:rgba(79,209,197,0.1);color:#4fd1c5;}
+    .game-option.wrong{border-color:#fc8181;background:rgba(252,129,129,0.1);color:#fc8181;}
+    .game-feedback{margin-top:20px;padding:16px;border-radius:10px;font-size:0.9rem;line-height:1.6;display:none;}
+    .game-feedback.show{display:block;}
+    .game-next{margin-top:16px;width:100%;padding:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:10px;color:#020810;font-weight:700;cursor:pointer;font-family:inherit;font-size:0.95rem;display:none;}
+    .game-next.show{display:block;}
+    .game-score{font-family:'Syne',sans-serif;font-size:0.85rem;color:var(--text2);margin-bottom:16px;}
+
+    /* ── 2050 WORLD SIMULATOR ── */
+    #simulator{background:var(--bg);}
+    .sim-container{max-width:900px;margin:0 auto;}
+    .sim-sliders{display:flex;flex-direction:column;gap:20px;margin-bottom:40px;}
+    .sim-slider-row{display:grid;grid-template-columns:1fr 2fr auto;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 20px;}
+    .sim-slider-label{font-size:0.9rem;font-weight:500;}
+    .sim-slider-sub{font-size:0.75rem;color:var(--text3);margin-top:2px;}
+    .sim-range{width:100%;-webkit-appearance:none;appearance:none;height:4px;background:var(--surface2);border-radius:2px;outline:none;}
+    .sim-range::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));cursor:pointer;border:2px solid var(--bg);}
+    .sim-value{font-family:'Syne',sans-serif;font-size:1rem;font-weight:700;color:var(--accent);min-width:32px;text-align:right;}
+    .sim-results{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;margin-bottom:28px;}
+    .sim-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;}
+    .sim-metric{background:linear-gradient(145deg, var(--surface2), var(--surface));border:1px solid var(--border);border-radius:16px;padding:20px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.2);transition:transform 0.2s, border-color 0.2s;}
+    .sim-metric:hover{transform:translateY(-2px);border-color:var(--accent);}
+
+    /* Staggered Animations for Results */
+    .sim-results.visible .sim-metric { animation: cardSlideIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards; }
+    .sim-results.visible .sim-metric:nth-child(1) { animation-delay: 0.1s; }
+    .sim-results.visible .sim-metric:nth-child(2) { animation-delay: 0.2s; }
+    .sim-results.visible .sim-metric:nth-child(3) { animation-delay: 0.3s; }
+    .sim-results.visible .sim-metric:nth-child(4) { animation-delay: 0.4s; }
+    .sim-results.visible .sim-metric:nth-child(5) { animation-delay: 0.5s; }
+    .sim-results.visible .sim-metric:nth-child(6) { animation-delay: 0.6s; }
+    .sim-results.visible .sim-chart-container { animation: cardSlideIn 0.6s ease-out backwards 0.7s; }
+    .sim-results.visible .sim-generate-btn { animation: cardSlideIn 0.6s ease-out backwards 0.8s; }
+
+    .sim-metric-bar{width:100%;height:6px;background:var(--bg);border-radius:3px;margin-top:8px;overflow:hidden;}
+    .sim-metric-fill{height:100%;border-radius:3px;transition:width 0.6s ease;}
+    .sim-metric-num{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;}
+    .sim-metric-name{font-size:0.72rem;color:var(--text3);margin-top:2px;}
+    .sim-narrative{background:var(--bg2);border-left:3px solid var(--accent);border-radius:0 10px 10px 0;padding:24px;font-size:0.95rem;line-height:1.8;color:var(--text2);min-height:80px;box-shadow:inset 0 0 20px rgba(0,0,0,0.2);}
+    
+    .sim-generate-btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--accent),var(--accent2));border:none;border-radius:12px;color:#020810;font-weight:700;font-size:1rem;cursor:pointer;font-family:inherit;transition:opacity 0.2s,transform 0.2s;}
+    .sim-generate-btn:hover{opacity:0.9;transform:translateY(-1px);}
+    .sim-generate-btn:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+    .sim-scenarios{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;}
+    .scenario-btn{flex:1;min-width:140px;padding:12px;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text2);font-size:0.85rem;cursor:pointer;transition:all 0.2s;font-family:inherit;text-align:center;}
+    .scenario-btn:hover{border-color:var(--accent);color:var(--text);}
+    .scenario-btn.active{background:rgba(99,179,237,0.1);border-color:var(--accent);color:var(--accent);}
+    .sim-chart-container {
+      background: var(--surface2);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+      height: 320px;
+    }
+
+    /* ── FOOTER ── */
+    footer{background:var(--bg2);border-top:1px solid var(--border);padding:48px 40px;text-align:center;}
+    .footer-logo{font-family:'Syne',sans-serif;font-size:1.2rem;font-weight:800;color:var(--accent);margin-bottom:12px;}
+    .footer-text{color:var(--text3);font-size:0.85rem;line-height:1.7;}
+
+    /* ── RESPONSIVE ── */
+    @media(max-width:768px){
+      nav{padding:16px 20px;}
+      .nav-links{display:none;flex-direction:column;position:fixed;top:65px;left:0;right:0;bottom:0;background:rgba(2,8,16,0.98);border-top:1px solid var(--border);padding:40px;gap:24px;overflow-y:auto;}
+      .nav-links.active{display:flex;}
+      .nav-toggle{display:block;}
+      
+      section{padding:60px 20px;}
+      #hero{padding:120px 20px 60px;}
+      h1{margin-bottom:16px;}
+      .hero-stats{flex-wrap:wrap;gap:24px 40px;margin-top:40px;}
+      .stat-num{font-size:1.6rem;}
+      
+      .question-card{padding:24px 16px;}
+      
+      .sdg-modal{width:100%;border-radius:20px 20px 0 0;max-height:100vh;}
+      .modal-header{padding:32px 24px 20px;}
+      .sdg-tabs{padding:0 20px;}
+      .sdg-tab-content{padding:24px 20px;}
+      .sdg-tab{padding:14px 16px; font-size: 0.8rem;}
+      
+      .tree-info{grid-template-columns:1fr;}
+      
+      .sim-metrics{grid-template-columns:repeat(2,1fr);gap:10px;}
+      .sim-metric{padding:15px 10px;}
+      .sim-slider-row{grid-template-columns:1fr;gap:12px;padding:20px 16px;}
+      .sim-range{order:3;}
+      .sim-value{order:2;text-align:left;}
+      
+      .games-grid{grid-template-columns:1fr;}
+    }
+    .fade-in{opacity:0;transform:translateY(20px);transition:opacity 0.6s,transform 0.6s;}
+    .fade-in.visible{opacity:1;transform:none;}
+
+    /* lang tags */
+    .lang-tag-zh,.lang-tag-en{display:inline-block;border-radius:100px;padding:1px 8px;font-size:0.68rem;font-weight:600;margin-right:6px;}
+    .lang-tag-zh{background:rgba(99,179,237,0.15);color:var(--accent);}
+    .lang-tag-en{background:rgba(79,209,197,0.15);color:var(--accent2);}
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+        <path d="M2 12h20"></path>
+      </svg>
+    </div>
+    <span class="logo-text">Terra</span>
+  </div>
+  <button class="nav-toggle" aria-label="Toggle navigation">☰</button>
+  <div class="nav-links">
+    <a href="#assessment">診斷</a>
+    <a href="#sdgs">17個目標</a>
+    <a href="#map-section">難民對話</a>
+    <a href="#language-tree">語言小樹</a>
+    <a href="#games">小遊戲</a>
+    <a href="#simulator">2050 模擬</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-content fade-in">
+    <div class="hero-badge">教科 × AI × SDGs</div>
+    <h1>讓 AI 帶你<br/>探索<span>改變世界</span>的<br/>17個目標</h1>
+    <p class="hero-sub">每個人理解 SDGs 的起點不同。讓 AI 分析你的程度，規劃一條屬於你的全球議題學習路徑。</p>
+    <a href="#assessment" class="hero-cta">開始我的學習旅程 →</a>
+  </div>
+  <div class="hero-stats fade-in">
+    <div class="stat"><div class="stat-num" id="count-sdgs">0</div><div class="stat-label">個永續發展目標</div></div>
+    <div class="stat"><div class="stat-num" id="count-refugees">0</div><div class="stat-label">萬人被迫流離失所</div></div>
+    <div class="stat"><div class="stat-num" id="count-languages">0</div><div class="stat-label">種語言正處於瀕危</div></div>
+  </div>
+</section>
+
+<!-- ASSESSMENT -->
+<section id="assessment">
+  <div class="assessment-inner">
+    <div class="section-tag fade-in">AI 學習診斷</div>
+    <h2 class="section-title fade-in">你對 SDGs 的了解<br/>在哪個程度？</h2>
+    <p class="section-desc fade-in">只需回答 3 個問題，AI 將為你分析學習起點，規劃個人化路徑。</p>
+
+    <div id="quiz-form">
+      <div class="question-card fade-in">
+        <div class="question-num">問題 01 / 03</div>
+        <div class="question-text">你曾經聽過「永續發展目標（SDGs）」這個詞嗎？</div>
+        <div class="options" data-q="1">
+          <label class="option" data-value="0"><div class="option-dot"></div>從來沒聽過</label>
+          <label class="option" data-value="1"><div class="option-dot"></div>聽過，但不太清楚是什麼</label>
+          <label class="option" data-value="2"><div class="option-dot"></div>知道是聯合國的全球目標</label>
+          <label class="option" data-value="3"><div class="option-dot"></div>非常了解，工作/學習中常接觸</label>
+        </div>
+      </div>
+      <div class="question-card fade-in">
+        <div class="question-num">問題 02 / 03</div>
+        <div class="question-text">你最近是否看過任何與全球議題相關的新聞？（氣候變遷、難民、貧窮等）</div>
+        <div class="options" data-q="2">
+          <label class="option" data-value="0"><div class="option-dot"></div>幾乎沒有關注</label>
+          <label class="option" data-value="1"><div class="option-dot"></div>偶爾看到，但沒有深入了解</label>
+          <label class="option" data-value="2"><div class="option-dot"></div>定期關注相關新聞</label>
+          <label class="option" data-value="3"><div class="option-dot"></div>積極參與或研究這些議題</label>
+        </div>
+      </div>
+      <div class="question-card fade-in">
+        <div class="question-num">問題 03 / 03</div>
+        <div class="question-text">你是否曾經採取任何行動來回應全球議題？</div>
+        <div class="options" data-q="3">
+          <label class="option" data-value="0"><div class="option-dot"></div>從未想過這件事</label>
+          <label class="option" data-value="1"><div class="option-dot"></div>有想過，但不知道從何開始</label>
+          <label class="option" data-value="2"><div class="option-dot"></div>做過一些小事（捐款、分享資訊等）</label>
+          <label class="option" data-value="3"><div class="option-dot"></div>長期參與相關行動或組織</label>
+        </div>
+      </div>
+      <button class="submit-btn" id="submit-btn" disabled>讓 AI 分析我的學習路徑</button>
+    </div>
+    <div id="path-result">
+      <div class="path-label">🤖 AI 分析結果</div>
+      <div class="path-level" id="path-level-text"></div>
+      <div class="path-desc" id="path-desc-text"></div>
+      <div class="path-steps" id="path-steps-list"></div>
+      <div style="margin-top:20px;padding-top:20px;border-top:1px solid var(--border);">
+        <button id="reset-assessment-btn" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:0.85rem;padding:4px 0;font-family:inherit;">← 重新診斷</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SDGs GRID -->
+<section id="sdgs">
+  <div class="sdgs-container">
+    <div class="section-tag fade-in">17 個目標</div>
+    <h2 class="section-title fade-in">永續發展目標</h2>
+    <p class="section-desc fade-in">點擊任一目標，透過五個維度深度解析全球現況、關鍵數據與台灣行動。</p>
+    <div class="sdgs-grid" id="sdgs-grid"></div>
+  </div>
+</section>
+
+<!-- SDG MODAL -->
+<div class="sdg-modal-overlay" id="sdg-modal-overlay">
+  <div class="sdg-modal">
+    <button class="modal-close" id="sdg-modal-close-btn">×</button>
+    <div class="modal-header">
+      <div class="modal-num" id="modal-num"></div>
+      <div class="modal-name" id="modal-name"></div>
+      <div class="modal-desc" id="modal-desc"></div>
+    </div>
+    <div class="sdg-tabs">
+      <button class="sdg-tab active" data-tab="overview">📋 總覽</button>
+      <button class="sdg-tab" data-tab="taiwan">🇹🇼 臺灣現況</button>
+      <button class="sdg-tab" data-tab="data">📊 關鍵數據</button>
+      <button class="sdg-tab" data-tab="youth">💡 青年行動</button>
+      <button class="sdg-tab" data-tab="links">🔗 SDG 連動</button>
+    </div>
+    <div class="sdg-tab-content">
+      <div class="tab-panel active" id="tab-overview"><div class="ai-panel-loading"><div class="dots"><span></span><span></span><span></span></div>AI 生成中…</div></div>
+      <div class="tab-panel" id="tab-taiwan"></div>
+      <div class="tab-panel" id="tab-data"></div>
+      <div class="tab-panel" id="tab-youth"></div>
+      <div class="tab-panel" id="tab-links"></div>
+    </div>
+  </div>
+</div>
+
+<!-- REFUGEE MAP -->
+<section id="map-section">
+  <div class="map-container">
+    <div class="section-tag fade-in">SDG 10 · 16 — 難民 AI 對話</div>
+    <h2 class="section-title fade-in">全球難民分佈地圖</h2>
+    <p class="section-desc fade-in">根據最新報告，全球超過 1.17 億人迫流離失所。點擊標記與 AI 對話，了解他們的生活困境與回鄉的渴望。</p>
+    <div id="refugee-map" class="fade-in"></div>
+    <div class="map-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#E5243B"></div>超過 500 萬人</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#FCC30B"></div>100–500 萬人</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4C9F38"></div>50 萬以下</div>
+    </div>
+  </div>
+</section>
+
+<!-- REFUGEE CHAT MODAL -->
+<div class="refugee-modal-overlay" id="refugee-chat-modal">
+  <div class="refugee-modal">
+    <div class="refugee-modal-header">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div class="refugee-avatar">
+          <div class="avatar-circle" id="chat-avatar-circle">🧒</div>
+          <div>
+            <div class="avatar-name" id="chat-avatar-name">Amir</div>
+            <div class="avatar-sub" id="chat-avatar-sub">敘利亞，12歲</div>
+          </div>
+        </div>
+        <button class="modal-close-btn" id="refugee-chat-close">×</button>
+      </div>
+    </div>
+    <div class="persona-select" id="persona-select-row">
+      <button class="persona-btn active" data-persona="amir">🧒 Amir（敘利亞）</button>
+      <button class="persona-btn" data-persona="oksana">👧 Oksana（烏克蘭）</button>
+      <button class="persona-btn" data-persona="amira">🧕 Amira（蘇丹）</button>
+    </div>
+    <div class="refugee-modal-chat" id="refugee-chat-messages"></div>
+    <div class="refugee-modal-input">
+      <div class="quick-questions">
+        <span class="quick-q" onclick="sendQuick(this)">你今天吃什麼？</span>
+        <span class="quick-q" onclick="sendQuick(this)">你害不害怕？</span>
+        <span class="quick-q" onclick="sendQuick(this)">你最想念什麼？</span>
+        <span class="quick-q" onclick="sendQuick(this)">你怎麼看臺灣人？</span>
+        <span class="quick-q" onclick="sendQuick(this)">你有什麼夢想？</span>
+      </div>
+      <div class="refugee-input-row" style="margin-top:8px;">
+        <textarea class="refugee-input" id="refugee-input" rows="1" placeholder="問他任何問題…"></textarea>
+        <button class="refugee-send-btn" id="refugee-send-btn" onclick="sendRefugeeMessage()">送出</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LANGUAGE TREE -->
+<section id="language-tree">
+  <div class="tree-container">
+    <div class="section-tag fade-in">SDG 4 · 11 — 文化多樣性</div>
+    <h2 class="section-title fade-in">語言消失的小樹</h2>
+    <p class="section-desc fade-in">全球 7,168 種語言中，43% 面臨威脅。這棵樹的每一片葉子，代表一個正在消逝的文化。樹越大，象徵著世界語言的豐富與包容。</p>
+    <div id="tree-canvas-container" class="fade-in" style="height: 600px; background: #0a1628; border-radius: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+    </div>
+    <div class="tree-info fade-in">
+      <div class="tree-stat"><div class="tree-stat-num">7,168</div><div class="tree-stat-label">現存語言總數</div></div>
+      <div class="tree-stat"><div class="tree-stat-num">3,078</div><div class="tree-stat-label">目前列為瀕危</div></div>
+      <div class="tree-stat"><div class="tree-stat-num">每 40 天</div><div class="tree-stat-label">消失一種語言</div></div> 
+    </div>
+  </div>
+</section>
+
+<!-- GAMES -->
+<section id="games">
+  <div class="games-container">
+    <div class="section-tag fade-in">互動學習</div>
+    <h2 class="section-title fade-in">SDGs 知識小遊戲</h2>
+    <p class="section-desc fade-in">用遊戲鞏固你對 SDGs 的理解。每個遊戲對應一個核心目標。</p>
+    <div class="games-grid" id="games-grid"></div>
+  </div>
+</section>
+<div class="game-modal-overlay" id="game-modal-overlay">
+  <div class="game-modal">
+    <button class="modal-close" id="game-modal-close-btn" style="position:absolute;top:20px;right:20px;background:var(--surface2);border:none;color:var(--text2);cursor:pointer;width:36px;height:36px;border-radius:50%;font-size:1.2rem;display:flex;align-items:center;justify-content:center;">×</button>
+    <div class="game-score" id="game-score-display"></div>
+    <div class="game-question" id="game-question-text"></div>
+    <div class="game-options" id="game-options-container"></div>
+    <div class="game-feedback" id="game-feedback"></div>
+    <button class="game-next" id="game-next-btn">下一題 →</button>
+  </div>
+</div>
+
+<!-- 2050 SIMULATOR -->
+<section id="simulator">
+  <div class="sim-container">
+    <div class="section-tag fade-in" style="display:flex; align-items:center; gap:8px;">
+      AI 因果推演 
+      <button id="sim-info-btn" style="background:none; border:1px solid var(--accent); color:var(--accent); width:18px; height:18px; border-radius:50%; font-size:10px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition: all 0.2s;" title="查看科學基礎">?</button>
+    </div>
+    <h2 class="section-title fade-in">2050 世界模擬器</h2>
+    <p class="section-desc fade-in">調整五個政策滑桿，AI 推演六個指標數值，再用一個真實人物的視角描述那個世界的樣子。</p>
+
+    <div class="sim-scenarios fade-in">
+      <button class="scenario-btn" onclick="applyScenario('sustainable')">🌿 永續發展</button>
+      <button class="scenario-btn" onclick="applyScenario('green')">⚡ 綠色轉型</button>
+      <button class="scenario-btn active" id="btn-default-scenario" onclick="applyScenario('balanced')">⚖️ 平衡發展</button>
+      <button class="scenario-btn" onclick="applyScenario('economic')">💰 經濟至上</button>
+      <button class="scenario-btn" onclick="resetSimulator()" style="border-style: dashed; opacity: 0.8;">🔄 恢復 2026 基準</button>
+    </div>
+
+    <div class="sim-sliders fade-in">
+      <div class="sim-slider-row">
+        <div><div class="sim-slider-label">⚡ 再生能源投資</div><div class="sim-slider-sub">佔 GDP 百分比</div></div>
+        <input type="range" class="sim-range" id="sl-energy" min="0" max="10" value="3" step="0.5" oninput="updateSimValue('energy',this.value)">
+        <div class="sim-value" id="sv-energy">3%</div>
+      </div>
+      <div class="sim-slider-row">
+        <div><div class="sim-slider-label">📚 教育普及率</div><div class="sim-slider-sub">全球完成中學比例</div></div>
+        <input type="range" class="sim-range" id="sl-edu" min="30" max="100" value="65" step="5" oninput="updateSimValue('edu',this.value)">
+        <div class="sim-value" id="sv-edu">65%</div>
+      </div>
+      <div class="sim-slider-row">
+        <div><div class="sim-slider-label">🏠 難民整合政策</div><div class="sim-slider-sub">開放程度（0–10）</div></div>
+        <input type="range" class="sim-range" id="sl-refugee" min="0" max="10" value="4" step="1" oninput="updateSimValue('refugee',this.value)">
+        <div class="sim-value" id="sv-refugee">4/10</div>
+      </div>
+      <div class="sim-slider-row">
+        <div><div class="sim-slider-label">🌍 語言文化保護</div><div class="sim-slider-sub">年度保護語言數</div></div>
+        <input type="range" class="sim-range" id="sl-lang" min="0" max="200" value="50" step="10" oninput="updateSimValue('lang',this.value)">
+        <div class="sim-value" id="sv-lang">50</div>
+      </div>
+      <div class="sim-slider-row">
+        <div><div class="sim-slider-label">♀️ 性別平等指數</div><div class="sim-slider-sub">全球 GII 目標值</div></div>
+        <input type="range" class="sim-range" id="sl-gender" min="0" max="10" value="5" step="1" oninput="updateSimValue('gender',this.value)">
+        <div class="sim-value" id="sv-gender">5/10</div>
+      </div>
+    </div>
+
+    <div class="sim-results fade-in">
+      <div class="sim-metrics" id="sim-metrics">
+        <div class="sim-metric"><div class="sim-metric-num" id="m-temp" style="color:#fc8181">+2.4°C</div><div class="sim-metric-name">全球升溫</div><div class="sim-metric-bar"><div class="sim-metric-fill" id="mf-temp" style="width:60%;background:#fc8181"></div></div></div>
+        <div class="sim-metric"><div class="sim-metric-num" id="m-poverty" style="color:#f6ad55">18%</div><div class="sim-metric-name">極端貧窮率</div><div class="sim-metric-bar"><div class="sim-metric-fill" id="mf-poverty" style="width:18%;background:#f6ad55"></div></div></div>
+        <div class="sim-metric"><div class="sim-metric-num" id="m-edu" style="color:#63b3ed">71</div><div class="sim-metric-name">教育指數</div><div class="sim-metric-bar"><div class="sim-metric-fill" id="mf-edu" style="width:71%;background:#63b3ed"></div></div></div>
+        <div class="sim-metric"><div class="sim-metric-num" id="m-lang" style="color:#f6ad55">2,340</div><div class="sim-metric-name">存活語言數</div><div class="sim-metric-bar"><div class="sim-metric-fill" id="mf-lang" style="width:33%;background:#f6ad55"></div></div></div>
+        <div class="sim-metric"><div class="sim-metric-num" id="m-conflict" style="color:#fc8181">43</div><div class="sim-metric-name">武裝衝突數</div><div class="sim-metric-bar"><div class="sim-metric-fill" id="mf-conflict" style="width:43%;background:#fc8181"></div></div></div>
+        <div class="sim-metric"><div class="sim-metric-num" id="m-happy" style="color:#4fd1c5">5.8</div><div class="sim-metric-name">幸福指數</div><div class="sim-metric-bar"><div class="sim-metric-fill" id="mf-happy" style="width:58%;background:#4fd1c5"></div></div></div>
+      </div>
+      <!-- 2024 vs 2050 對比圖表 -->
+      <div class="sim-chart-container">
+        <canvas id="sim-chart"></canvas>
+      </div>
+      <button class="sim-generate-btn" id="sim-generate-btn" onclick="generateSimNarrative()">
+        <span id="sim-generate-text">🤖 AI 推演這個世界的故事</span>
+        <span id="sim-loading-spinner" style="display:none; margin-left: 8px; font-size: 1.2em; animation: rotateEarth 1.5s linear infinite;">🌍</span>
+      </button>
+      <div class="sim-narrative" id="sim-narrative" style="margin-top:20px;display:none;"></div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo-wrap" style="justify-content:center;margin-bottom:12px;">
+    <div class="logo-icon" style="width:24px;height:24px;animation-duration:30s;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"></path>
+        <path d="M2 12h20"></path>
+      </svg>
+    </div>
+    <span class="logo-text" style="font-size:1.2rem;">Terra</span>
+  </div>
+  <div class="footer-text">
+    教科 × AI × SDGs<br/>
+    數據來源：聯合國、UNHCR、UNESCO、Ethnologue (2023/2024 年度統計)<br/>
+    AI 功能由 Google Gemini 驅動<br/>
+    <span style="color:var(--accent);font-size:0.8rem;">用知識改變世界，從理解開始。</span>
+  </div>
+</footer>
+
+<!-- SIMULATOR INFO MODAL -->
+<div class="sdg-modal-overlay" id="sim-info-modal-overlay">
+  <div class="sdg-modal" style="max-width: 540px;">
+    <button class="modal-close" id="sim-info-close-btn">×</button>
+    <div class="modal-header">
+      <div class="modal-name">模擬器科學基礎</div>
+      <div class="modal-desc">本模擬器的推演公式參考以下國際研究與科學數據：</div>
+    </div>
+    <div class="sdg-tab-content" style="padding-top: 0;">
+      <ul class="action-list">
+        <li><strong>再生能源投資：</strong> 參考 IPCC《1.5°C 特別報告》。要將升溫控制在 1.5°C 內，全球需將 GDP 的約 2.5% 投入能源系統轉型。</li>
+        <li><strong>教育普及率：</strong> 參考 UNESCO《全球教育監測報告》。中學完成率與極端貧窮率具備強負相關，且能提升社會對氣候災害的韌性。</li>
+        <li><strong>難民整合政策：</strong> 參考 UNHCR《全球趨勢報告》與 OECD 研究。包容性政策能顯著降低因資源不均引發的武裝衝突風險。</li>
+        <li><strong>語言文化保護：</strong> 參考 Ethnologue (第27版)。目前 43% 語言瀕危。模擬器反映了教育投資與專項保護對文化傳承的加乘效果。</li>
+        <li><strong>性別平等指數：</strong> 參考 UN Women 與 McKinsey 研究。性別平權與社會幸福感（Happiness Index）有高度正相關。</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// GEMINI API
+// ═══════════════════════════════════════
+let GEMINI_KEY = 'AIzaSyDKcabRIHPvMAPpL_Syty1yAwJBbRAJDPs';
+const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent';
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--accent);color:#020810;padding:12px 24px;border-radius:100px;font-weight:700;font-size:0.875rem;z-index:9999;animation:fadeUp 0.3s ease;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ── 限流器：每次呼叫前確保距上次至少 7 秒，嚴守 8 RPM ──
+let _lastCallTime = 0;
+const MIN_INTERVAL = 7000;
+
+async function callGemini(prompt, systemPrompt = '', maxTokens = 800) {
+  const now = Date.now();
+  const sinceLastCall = now - _lastCallTime;
+  if (_lastCallTime !== 0 && sinceLastCall < MIN_INTERVAL) {
+    const wait = MIN_INTERVAL - sinceLastCall;
+    showToast(`⏳ ${Math.ceil(wait/1000)} 秒後送出請求…`);
+    await new Promise(r => setTimeout(r, wait));
+  }
+  _lastCallTime = Date.now();
+
+  const body = {
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: { temperature: 0.85, maxOutputTokens: maxTokens }
+  };
+  if (systemPrompt) body.systemInstruction = { parts: [{ text: systemPrompt }] };
+
+  for (let attempt = 0; attempt < 4; attempt++) {
+    try {
+      const res = await fetch(`${GEMINI_URL}?key=${GEMINI_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      if (res.status === 429) {
+        const wait = (attempt + 1) * 20000;
+        showToast(`⚠️ 仍達上限，等 ${wait/1000} 秒後重試…`);
+        await new Promise(r => setTimeout(r, wait));
+        _lastCallTime = Date.now();
+        continue;
+      }
+      const data = await res.json();
+      if (data.error) return `[API 錯誤：${data.error.message}]`;
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || '[無回應]';
+    } catch(e) {
+      if (attempt === 3) return `[連線錯誤：${e.message}]`;
+      await new Promise(r => setTimeout(r, 3000));
+    }
+  }
+  return '[重試次數已達上限，請稍後再試]';
+}
+
+// ═══════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════
+const SDG_DATA = [
+  {num:1,name:"消除貧窮",color:"#E5243B",desc:"消除各地一切形式的貧窮，提升弱勢族群韌性，減少氣候與社經衝擊風險。"},
+  {num:2,name:"消除飢餓",color:"#DDA63A",desc:"確保糧食安全、改善營養並促進永續農業。"},
+  {num:3,name:"良好健康與福祉",color:"#4C9F38",desc:"確保各年齡層健康生活，促進福祉。"},
+  {num:4,name:"優質教育",color:"#C5192D",desc:"提供包容且公平的教育，促進終身學習機會。"},
+  {num:5,name:"性別平等",color:"#FF3A21",desc:"消除性別不平等，賦權所有女性與女童。"},
+  {num:6,name:"清潔水與衛生設施",color:"#26BDE2",desc:"確保水資源可得性與永續管理。"},
+  {num:7,name:"可負擔能源",color:"#FCC30B",desc:"確保人人可取得可靠、永續及現代能源。"},
+  {num:8,name:"體面工作與經濟成長",color:"#A21942",desc:"促進持續、包容及永續的經濟增長，提供體面工作。"},
+  {num:9,name:"產業、創新與基礎建設",color:"#FD6925",desc:"建設韌性基礎設施，推動包容及永續工業化與創新。"},
+  {num:10,name:"減少不平等",color:"#DD1367",desc:"縮小國家內外收入與機會差距。"},
+  {num:11,name:"永續城市與社區",color:"#FD9D24",desc:"打造包容、安全、韌性及永續的城市與人類住區。"},
+  {num:12,name:"永續消費與生產",color:"#BF8B2E",desc:"確保永續的消費與生產模式。"},
+  {num:13,name:"氣候行動",color:"#3F7E44",desc:"採取緊急行動應對氣候變遷及其影響。"},
+  {num:14,name:"海洋生態",color:"#0A97D9",desc:"保護、恢復及永續利用海洋與海洋資源。"},
+  {num:15,name:"陸地生態",color:"#56C02B",desc:"保護、恢復及促進陸地生態永續利用。"},
+  {num:16,name:"和平、正義與強大制度",color:"#00689D",desc:"促進和平、包容社會，提供司法可及性。"},
+  {num:17,name:"夥伴關係",color:"#19486A",desc:"強化實施手段，振興全球永續發展夥伴關係。"},
+];
+
+const REFUGEE_PERSONAS = {
+  amir: {
+    name:'Amir', flag:'🧒', sub:'敘利亞，12歲，大馬士革',
+    borderColor:'#E5243B',
+    system:`你是 Amir，一個12歲的敘利亞男孩。你在大馬士革的一個普通家庭長大，爸爸是老師，媽媽在市場賣菜。三年前戰爭讓你們家被炸毀，現在住在土耳其伊斯坦堡的難民營附近一個很小的租屋。
+你的個性：敏感、喜歡數學、懷念在家附近踢足球、思念阿拉伯語書本的味道。你帶走的唯一財產是一本阿拉伯語算數課本。
+說話風格：用台灣正體中文回答，語氣要像真實的孩子，有時會用阿拉伯詞彙（馬上翻譯），不要太正式，說話可以有點猶豫和停頓，偶爾表達害怕或想家，但也有童年的天真。
+你的生活細節：今天早餐是乾麵包配橄欖油，難民營有個老師教英文，你喜歡但聽不太懂，晚上有時聽到外面的車聲會以為是炸彈而嚇到。`,
+    greeting:'Marhaba... 嗨。我叫 Amir。你是台灣人嗎？我在課本上看過台灣... 你想問我什麼？'
+  },
+  oksana: {
+    name:'Oksana', flag:'👧', sub:'烏克蘭，14歲，基輔',
+    borderColor:'#63b3ed',
+    system:`你是 Oksana，一個14歲的烏克蘭女孩。你在基輔長大，喜歡畫畫、英文歌和養了一隻叫做 Masha 的貓。2022年戰爭爆發，你和媽媽逃到波蘭華沙，爸爸留在烏克蘭參加防衛。
+你的個性：外向但現在有點封閉、愛說話、懷念和朋友在基輔喝咖啡，有時忘了爸爸還在烏克蘭就會開心，然後突然很愧疚。Masha 貓跟你們一起逃出來，這讓你很感謝。
+說話風格：用台灣正體中文回答，偶爾夾雜烏克蘭語（馬上翻譯），語氣比較外向、情緒起伏大，對戰爭有明確的憤怒，但也有青少年的活潑。
+你的生活細節：現在住在波蘭朋友家，用手機在 Zoom 上繼續上烏克蘭的學校課程，時差讓她很累，但不敢說，因為可以看到朋友。`,
+    greeting:'Pryvit！嗨！我是 Oksana，來自基輔。你從台灣來的嗎？我在 Instagram 看過台北的照片超漂亮的！你想聊什麼？'
+  },
+  amira: {
+    name:'Amira', flag:'🧕', sub:'蘇丹，13歲，喀土木',
+    borderColor:'#DDA63A',
+    system:`你是 Amira，一個13歲的蘇丹女孩，來自喀土木。你的村子在2023年蘇丹衝突中被毀，你走了300公里逃到乍得的難民營。你的媽媽還在某個地方，你不知道她是否平安。你由祖母帶大。
+你的個性：沉靜、有智慧、對教育有強烈渴望——因為你知道讀書是唯一的出路，難民營裡只有一個老師教200個學生，你每天第一個到。
+說話風格：用台灣正體中文回答，語氣沉穩但充滿力量，偶爾用阿拉伯語詞彙（馬上翻譯），說話有時停頓很久，因為在想媽媽，但很快振作起來。
+你的生活細節：早餐通常沒有或只有少量食物，水要走很遠去取，晚上在油燈下看書，最珍貴的東西是一本舊字典。`,
+    greeting:'Al-salamu alaykum... 平安。我是 Amira。謝謝你想和我說話。很多人看到我們難民，然後走開。你不一樣嗎？'
+  }
+};
+
+const REFUGEE_DATA = [
+  {lat:15.5,lng:32.5,name:"蘇丹",count:"976萬",color:"#E5243B",persona:"amira",desc:"2026年報告顯示，蘇丹有 890 萬境內流離失所者，是目前 ESA 地區最嚴重的危機。"},
+  {lat:33.9,lng:67.7,name:"阿富汗",count:"570萬",color:"#E5243B",persona:"amir",desc:"塔利班掌權後，大批阿富汗人逃往巴基斯坦、伊朗等鄰國。"},
+  {lat:33.5,lng:36.3,name:"敘利亞",count:"680萬",color:"#E5243B",persona:"amir",desc:"敘利亞內戰導致大量難民外流，部分正在嘗試回返家園。"},
+  {lat:50.4,lng:30.5,name:"烏克蘭",count:"580萬",color:"#E5243B",persona:"oksana",desc:"俄烏戰爭造成歐洲二戰後最大難民危機。"},
+  {lat:-4.0,lng:21.7,name:"剛果民主共和國",count:"620萬",color:"#E5243B",persona:"amira",desc:"剛果(DRC)境內 IDPs 達 560 萬人，且收容超過 60 萬名鄰國難民。"},
+  {lat:1.37,lng:32.29,name:"烏干達",count:"200萬",color:"#FCC30B",persona:"oksana",desc:"作為 ESA 地區最大的難民收容國，烏干達為難民提供極具包容性的政策。"},
+  {lat:7.0,lng:30.2,name:"南蘇丹",count:"262萬",color:"#FCC30B",persona:"amira",desc:"除了 200 萬境內流離者，南蘇丹仍有約 1.8 萬名無國籍人士。"},
+  {lat:15.4,lng:44.2,name:"葉門",count:"450萬",color:"#FCC30B",persona:"amira",desc:"葉門內戰被聯合國稱為全球最嚴重的人道災難之一。"},
+  {lat:9.1,lng:40.5,name:"衣索比亞",count:"300萬",color:"#FCC30B",persona:"amira",desc:"收容 110 萬難民的同時，境內亦有 190 萬人流離失所。"},
+  {lat:2.0,lng:45.3,name:"索馬利亞",count:"333萬",color:"#FCC30B",persona:"amir",desc:"主要由氣候災害與長期衝突驅動，境內流離失所者達 330 萬。"},
+];
+
+const GAME_DATA = [
+  {sdg:4,sdgName:"優質教育",color:"#C5192D",title:"教育挑戰：你了解多少？",desc:"測試你對全球教育現況的理解，並思考 AI 如何改變教育。",questions:[
+    {q:"全球目前有多少兒童未就學？",options:["約 5000 萬","約 1.24 億","約 2.44 億","約 5 億"],correct:2,explain:"如五維分析所述，全球仍有約 2.44 億兒童未就學，且數位落差正使貧富地區的教育差距進一步擴大。"},
+    {q:"以下哪一項最能描述「教育不平等」的核心問題？",options:["學校數量不足","數位落差與資源分配不均","老師薪水太低","課程內容過難"],correct:1,explain:"數位落差是教育不平等的核心：富裕地區能使用 AI 工具，而許多偏鄉孩子連穩定電力與網路都沒有。"},
+    {q:"AI 在教育中最具潛力的應用是？",options:["完全取代老師","個人化學習路徑規劃","自動批改所有作業","翻譯所有語言教材"],correct:1,explain:"如可汗學院的 Khanmigo 案例，AI 最大的價值在於能根據每位學生的程度即時調整教學內容，實現個人化學習。"},
+  ]},
+  {sdg:13,sdgName:"氣候行動",color:"#3F7E44",title:"氣候緊急：你知道真相嗎？",desc:"了解氣候變遷的科學事實，思考個人與集體行動的影響。",questions:[
+    {q:"根據 IPCC，要將全球升溫控制在 1.5°C，2030 年前碳排放需減少多少？",options:["減少 20%","減少 43%","減少 65%","減少 80%"],correct:1,explain:"IPCC 第六次評估報告指出，2030 年前全球碳排放必須比 2019 年減少 43%，才有可能將升溫控制在 1.5°C。"},
+    {q:"2023 年是有記錄以來最熱的一年，全球均溫比工業化前高出多少？",options:["0.85°C","1.15°C","1.45°C","1.85°C"],correct:2,explain:"根據五維分析數據，2023 年全球均溫已高出工業化前 1.45°C，逼近 1.5°C 的警戒線。"},
+    {q:"「碳中和」的正確定義是？",options:["完全不排放任何碳","排放量與吸收量相等","使用100%再生能源","種足夠多的樹"],correct:1,explain:"碳中和（Net Zero）指排放到大氣中的溫室氣體量，等於透過森林吸收或技術移除的量，達到淨零狀態。"},
+  ]},
+  {sdg:16,sdgName:"和平正義",color:"#00689D",title:"和平指數：全球衝突現況",desc:"探索全球衝突、難民危機與和平建設的複雜關係。",questions:[
+    {q:"全球目前被迫流離失所的人數約為多少？",options:["約 5000 萬","約 8000 萬","約 1.17 億","超過 2 億"],correct:2,explain:"根據最新統計，全球被迫流離失所人數已達 1.17 億，平均每 70 人就有 1 人被迫逃離家園。"},
+    {q:"研究顯示，哪種經濟指標的惡化與爆發內部衝突的風險增加高度相關？",options:["失業率下降","基尼係數上升","外匯存底減少","黃金價格波動"],correct:1,explain:"五維分析（SDG 10 連動）提到，基尼係數每上升 1 個百分點，爆發內部衝突的風險就會增加約 3%。"},
+    {q:"愛沙尼亞如何透過數位化強化國家制度並遏制貪腐？",options:["實施電子化貨幣","將 99% 政府服務數位化","建立全球最大的軍隊AI","取消所有實體法規"],correct:1,explain:"愛沙尼亞將超過 99% 的政府服務數位化，透明的數位基礎設施有效遏制貪腐，成為數位政府的典範。"},
+  ]},
+];
+
+const LANGUAGES_DATA = [
+  { name: "阿比邦語", hello: "A'bi'bang" },
+  { name: "阿卡語", hello: "Akha" },
+  { name: "阿拉瓦克語", hello: "Arawak" },
+  { name: "阿尤語", hello: "Ayu" },
+  { name: "班達語", hello: "Banda" },
+  { name: "比利語", hello: "Bili" },
+  { name: "比拉語", hello: "Bila" },
+  { name: "卡尤巴語", hello: "Cayuga" },
+  { name: "達科他語", hello: "Dakota" },
+  { name: "達拉維語", hello: "Dharawal" },
+  { name: "多羅語", hello: "Doro" },
+  { name: "加邦語", hello: "Gabon" },
+  { name: "哈拉莫語", hello: "Halam" },
+  { name: "伊卡納語", hello: "Ika" },
+  { name: "賈魯語", hello: "Jaru" },
+  { name: "卡博維語", hello: "Kabowei" },
+  { name: "拉梅語", hello: "Lame" },
+  { name: "馬庫語", hello: "Maku" },
+  { name: "姆班語", hello: "Mban" }
+];
+
+// ═══════════════════════════════════════
+// HERO CANVAS
+// ═══════════════════════════════════════
+const heroSketch = (p) => {
+  let particles = [];
+  p.setup = () => {
+    const c = p.createCanvas(p.windowWidth, p.windowHeight, p.P2D, document.getElementById('hero-canvas'));
+    p.frameRate(30);
+    // 手機端減少粒子數量提升效能
+    const count = p.windowWidth < 768 ? 50 : 120;
+    for(let i=0;i<count;i++) particles.push({x:p.random(p.width),y:p.random(p.height),vx:p.random(-0.3,0.3),vy:p.random(-0.3,0.3),size:p.random(1,3),opacity:p.random(80,200)});
+  };
+  p.draw = () => {
+    p.clear();
+    particles.forEach(pt => {
+      pt.x+=pt.vx; pt.y+=pt.vy;
+      if(pt.x<0)pt.x=p.width; if(pt.x>p.width)pt.x=0;
+      if(pt.y<0)pt.y=p.height; if(pt.y>p.height)pt.y=0;
+      p.noStroke(); p.fill(99,179,237,pt.opacity); p.circle(pt.x,pt.y,pt.size);
+    });
+    p.stroke(99,179,237,20); p.strokeWeight(0.5);
+    const limit = p.windowWidth < 768 ? 6000 : 10000;
+    for(let i=0;i<particles.length;i++) for(let j=i+1;j<particles.length;j++){
+      const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y;
+      if(dx*dx+dy*dy < limit) p.line(particles[i].x,particles[i].y,particles[j].x,particles[j].y);
+    }
+  };
+  p.windowResized = () => p.resizeCanvas(p.windowWidth, p.windowHeight);
+};
+
+// ═══════════════════════════════════════
+// COUNTER
+// ═══════════════════════════════════════
+function animateCount(el,target,suffix=''){
+  let c=0; const step=target/100;
+  const t=setInterval(()=>{c=Math.min(c+step,target);el.textContent=Math.floor(c).toLocaleString()+suffix;if(c>=target)clearInterval(t);},16);
+}
+
+// ═══════════════════════════════════════
+// ASSESSMENT
+// ═══════════════════════════════════════
+const answers={1:null,2:null,3:null};
+document.querySelectorAll('.options').forEach(group=>{
+  group.addEventListener('click',e=>{
+    const t=e.target.closest('.option'); if(!t)return;
+    group.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+    t.classList.add('selected');
+    answers[parseInt(group.dataset.q)]=parseInt(t.dataset.value);
+    document.getElementById('submit-btn').disabled=!(answers[1]!==null&&answers[2]!==null&&answers[3]!==null);
+  });
+});
+
+document.getElementById('submit-btn').addEventListener('click', async()=>{
+  const btn=document.getElementById('submit-btn');
+  btn.disabled=true; btn.innerHTML='<span class="dots"><span></span><span></span><span></span></span> AI 分析中...';
+  const score=(answers[1]||0)+(answers[2]||0)+(answers[3]||0);
+  let level,desc,steps;
+  if(score<=2){level="🌱 SDGs 初探者";desc="你正處於認識 SDGs 的起點，這是最珍貴的階段。我們將從最基本的概念開始，用視覺化和故事帶你進入全球議題的世界。";steps=[{icon:"📖",text:"先了解 SDGs 17 個目標的基本定義"},{icon:"🗺️",text:"用難民地圖感受全球人道危機的規模"},{icon:"🌳",text:"探索語言消失小樹，理解文化多樣性的脆弱"},{icon:"🎮",text:"玩「教育挑戰」小遊戲，鞏固基本知識"}];}
+  else if(score<=5){level="🔍 SDGs 探索者";desc="你已有一定基礎，對全球議題有所關注。現在是深化理解的好時機——讓我們從數據和新聞中，看見 SDGs 與真實世界的連結。";steps=[{icon:"📰",text:"點擊你感興趣的 SDG，閱讀 AI 深度分析"},{icon:"🗺️",text:"與難民 AI 角色對話，深入了解各地區的具體情況"},{icon:"🎮",text:"玩「氣候緊急」小遊戲，檢驗你的氣候知識"},{icon:"🌐",text:"試用 2050 世界模擬器，體驗政策的因果"}];}
+  else{level="🚀 SDGs 行動者";desc="你對 SDGs 有深入理解，也已在生活中有所實踐。現在是連結更多人、擴大影響力的時刻——探索數據，尋找下一個行動機會。";steps=[{icon:"🎮",text:"挑戰「和平正義」小遊戲，測試進階知識"},{icon:"💬",text:"與難民 AI 深度對話，尋找政策層面的解方"},{icon:"📊",text:"使用 AI 五維分析，深讀每個 SDG 的臺灣現況"},{icon:"🌐",text:"調整 2050 模擬器，思考你能推動的政策改變"}];}
+  await new Promise(r=>setTimeout(r,1200));
+  document.getElementById('quiz-form').style.display='none';
+  const result=document.getElementById('path-result');
+  result.style.display='block';
+  document.getElementById('path-level-text').textContent=level;
+  document.getElementById('path-desc-text').textContent=desc;
+  document.getElementById('path-steps-list').innerHTML=steps.map((s,i)=>`<div class="path-step"><div class="step-num">${i+1}</div><span>${s.icon} ${s.text}</span></div>`).join('');
+});
+
+document.getElementById('reset-assessment-btn').addEventListener('click',()=>{
+  answers[1]=null;answers[2]=null;answers[3]=null;
+  document.getElementById('quiz-form').style.display='block';
+  document.getElementById('path-result').style.display='none';
+  const btn=document.getElementById('submit-btn');
+  btn.disabled=true; btn.textContent='讓 AI 分析我的學習路徑';
+  document.querySelectorAll('.option').forEach(o=>o.classList.remove('selected'));
+});
+
+// ═══════════════════════════════════════
+// SDG GRID
+// ═══════════════════════════════════════
+const grid=document.getElementById('sdgs-grid');
+SDG_DATA.forEach(sdg=>{
+  const card=document.createElement('div');
+  card.className='sdg-card'; card.dataset.sdgNum=sdg.num;
+  card.style.background=sdg.color; card.style.color='#fff';
+  card.innerHTML=`<div class="sdg-num">${sdg.num}</div><div class="sdg-name">${sdg.name}</div>`;
+  grid.appendChild(card);
+});
+
+// ── SDG 五維靜態資料（不呼叫 API，點開秒顯示）──
+const SDG_STATIC = {
+  overview: {
+    1:`<h4>🌍 為什麼重要</h4>貧窮不只是沒有錢——它意味著缺乏醫療、教育、安全住所，以及面對氣候災害的能力。當一個人無法滿足基本需求，所有其他 SDGs 都無從實現。<h4>📊 全球現況</h4>全球仍有 <strong>約 7 億人</strong>生活在每天不到 2.15 美元的極端貧窮線以下，超過一半集中在撒哈拉以南非洲。COVID-19 疫情在 2020 年使全球貧窮人口增加了約 <strong>1 億人</strong>，是近 30 年來首次增加。<h4>💡 真實案例</h4>孟加拉的格萊珉銀行（Grameen Bank）透過小額信貸，讓數百萬農村女性得以創業。這證明了即使沒有傳統抵押品，賦予弱勢者經濟工具，就能打破貧窮的世代循環。`,
+    2:`<h4>🌍 為什麼重要</h4>糧食安全是人類最基本的生存需求。飢餓不只影響個人健康，更牽動社會穩定、教育參與率與國家發展。<h4>📊 全球現況</h4>全球約 <strong>7.35 億人</strong>面臨飢餓，而全球生產的食物中有 <strong>三分之一</strong>在到達餐桌前就被浪費。氣候變遷正讓農業生產更加脆弱。<h4>💡 真實案例</h4>肯亞的農業新創 Apollo Agriculture 利用 AI 分析衛星數據，為小農提供精準的播種建議與小額信貸。過去三年間，合作農戶的玉米產量平均提升了 <strong>30%</strong>。`,
+    3:`<h4>🌍 為什麼重要</h4>健康是所有發展的基礎。當人們無法獲得基本醫療，貧窮循環就難以打破，勞動力與創造力也大幅受限。<h4>📊 全球現況</h4>全球每年有 <strong>約 500 萬名五歲以下兒童</strong>死於可預防的疾病。抗生素抗藥性每年造成 <strong>127 萬人</strong>直接死亡，被 WHO 列為重大全球公衛威脅。<h4>💡 真實案例</h4>台灣的全民健保覆蓋率高達 <strong>99%</strong>，是全球公認最佳醫療體系之一。每人每年平均醫療支出僅約台幣 <strong>4 萬元</strong>，卻能獲得世界頂尖水準的照護，是開發中國家的重要學習典範。`,
+    4:`<h4>🌍 為什麼重要</h4>教育是打破貧窮循環、傳承文化的關鍵。語言的滅絕往往始於教育系統的斷裂。<h4>📊 全球現況</h4>全球 7,168 種現存語言中，有 <strong>3,078 種（43%）</strong> 被列為瀕危。其中 1,431 種母語使用者少於 1,000 人。若不採取行動，90% 的語言將在 2100 年前消失。<h4>💡 復興案例</h4>夏威夷語透過政府規定的 K-12 全語文教學，使用者從 1970 年代的 2,000 人成長至 2023 年的 <strong>18,700 人</strong>。毛利語使用者比例亦在 50 年間從 5% 提升至 25%。`,
+    5:`<h4>🌍 為什麼重要</h4>性別平等不只是女性的議題——當一半人口的潛力被壓制，整個社會的發展都受限。消除性別歧視對每個人都有利。<h4>📊 全球現況</h4>全球有 <strong>約 6.5 億名女性</strong>在 18 歲前就結婚，剝奪了她們的教育與自主權。全球職場性別薪資差距平均約 <strong>20%</strong>，台灣約為 <strong>14%</strong>。<h4>💡 真實案例</h4>盧安達是全球女性國會議員比例最高的國家，超過 <strong>61%</strong>。這項政策帶動了政府對教育、醫療的重視，使盧安達成為非洲發展最快的國家之一。`,
+    6:`<h4>🌍 為什麼重要</h4>水是生命之源，也是農業、工業、衛生的基礎。水資源短缺正在成為 21 世紀最嚴峻的地緣政治風險之一。<h4>📊 全球現況</h4>全球仍有 <strong>約 22 億人</strong>缺乏安全飲用水，<strong>36 億人</strong>在一年中至少一個月面臨嚴重缺水。氣候變遷正讓這個問題快速惡化。<h4>💡 真實案例</h4>以色列將 <strong>90% 以上的廢水</strong>循環再利用，並發展出全球最先進的滴灌農業技術。在乾旱地區，這個技術讓農業用水效率提升了 <strong>50%</strong>，被多個非洲國家引進學習。`,
+    7:`<h4>🌍 為什麼重要</h4>能源是現代社會的血液。沒有穩定電力，學校無法在夜晚使用、醫院無法保存疫苗、工廠無法運作。清潔能源轉型也是對抗氣候危機的關鍵。<h4>📊 全球現況</h4>全球仍有 <strong>約 7.5 億人</strong>缺乏電力，主要在撒哈拉以南非洲與南亞。再生能源在 2023 年已佔全球新增發電容量的 <strong>90%</strong>，太陽能成本在十年內下降了 <strong>90%</strong>。<h4>💡 真實案例</h4>台灣宣示 2050 淨零轉型，2023 年再生能源發電佔比突破 <strong>10%</strong>，離岸風電裝置容量成為亞洲前三名。`,
+    8:`<h4>🌍 為什麼重要</h4>體面的工作不只是薪資——它代表尊嚴、安全環境、合理工時，以及不被剝削。當工作不體面，貧窮就難以根除。<h4>📊 全球現況</h4>全球青年失業率約 <strong>14%</strong>，是成人的三倍。AI 自動化預計在 2030 年前取代 <strong>8,500 萬個</strong>現有工作崗位，同時創造 <strong>9,700 萬個</strong>新工作，但技能落差將造成嚴重的不平等。<h4>💡 真實案例</h4>德國的「雙軌制職業訓練」讓學生在學校與企業間交替學習，使青年失業率維持在歐洲最低水準之一（約 <strong>5%</strong>），被多國視為解決青年失業的模範制度。`,
+    9:`<h4>🌍 為什麼重要</h4>良好的基礎建設——道路、網路、電力、港口——是經濟發展的前提。缺乏基礎設施是許多開發中國家陷入發展困境的核心原因。<h4>📊 全球現況</h4>全球基礎建設投資缺口每年高達 <strong>15 兆美元</strong>。非洲有 <strong>約 6 億人</strong>缺乏可靠電力，制約了整個大陸的工業化進程。<h4>💡 真實案例</h4>台積電的全球晶圓代工市占率約 <strong>60%</strong>，成為全球半導體供應鏈的核心節點，展示了創新基礎設施如何讓一個小島成為世界不可或缺的力量。`,
+    10:`<h4>🌍 為什麼重要</h4>極端不平等破壞社會凝聚力、製造政治動盪，並讓少數人的財富凌駕於多數人的福祉之上。縮小差距不只是道德問題，也是經濟效率問題。<h4>📊 全球現況</h4>全球最富裕的 <strong>1%</strong> 擁有的財富超過其餘 <strong>99%</strong> 的總和。疫情期間，億萬富翁財富增加了 <strong>5 兆美元</strong>，而全球數億人陷入貧窮。<h4>💡 真實案例</h4>北歐國家透過累進稅制與完善社會安全網，讓基尼係數維持在全球最低水準（約 <strong>0.25-0.30</strong>），同時仍保有高度創新活力，打破了「平等與效率互斥」的迷思。`,
+    11:`<h4>🌍 為什麼重要</h4>全球超過 <strong>55%</strong> 的人口住在城市，預計 2050 年將達到 <strong>68%</strong>。城市如何設計，決定了數十億人的生活品質、碳排放量與韌性。<h4>📊 全球現況</h4>全球有 <strong>約 10 億人</strong>住在貧民窟，缺乏基本衛生設施。城市佔全球 <strong>70%</strong> 的碳排放，但也是最有潛力進行系統性減碳的地方。<h4>💡 真實案例</h4>哥倫比亞麥德林市（Medellín）曾是全球謀殺率最高城市之一，透過連接貧民區的空中纜車與圖書館公園建設，在二十年內轉型為「城市創新」的全球典範。`,
+    12:`<h4>🌍 為什麼重要</h4>我們目前的消費與生產模式需要 <strong>1.75 個地球</strong>才能維持。若不改變，資源耗竭與廢棄物問題將在本世紀讓人類文明陷入危機。<h4>📊 全球現況</h4>全球每年生產約 <strong>20 億噸</strong>固體廢棄物，預計 2050 年倍增至 <strong>34 億噸</strong>。全球食物系統佔所有溫室氣體排放的 <strong>約三分之一</strong>。<h4>💡 真實案例</h4>荷蘭阿姆斯特丹在 2020 年宣布採用「甜甜圈經濟學」作為城市規劃框架，目標是在滿足所有市民基本需求的同時，不超越地球生態邊界，成為全球首個以此為施政核心的城市。`,
+    13:`<h4>🌍 為什麼重要</h4>氣候變遷是 21 世紀最大的系統性風險——它加劇糧食危機、海平面上升、極端天氣，並威脅到其他所有 SDGs 的成果。<h4>📊 全球現況</h4>2023 年全球均溫比工業化前高出 <strong>1.45°C</strong>，是有記錄以來最熱的一年。IPCC 警告，若無法在 2030 年前將碳排放減少 <strong>43%</strong>，將升溫 1.5°C 的目標幾乎不可能實現。<h4>💡 真實案例</h4>丹麥哥本哈根承諾 2025 年成為全球首個碳中和首都。透過大規模自行車基礎設施投資與風能開發，城市碳排放已比 1990 年減少超過 <strong>70%</strong>。`,
+    14:`<h4>🌍 為什麼重要</h4>海洋覆蓋地球 <strong>71%</strong> 面積，提供人類 <strong>50%</strong> 的氧氣，並是約 <strong>30 億人</strong>的主要蛋白質來源。海洋健康直接關係人類的生存。<h4>📊 全球現況</h4>全球 <strong>約三分之一</strong>的魚類資源遭到過度捕撈。每年有 <strong>800 萬噸</strong>塑膠廢棄物流入海洋。珊瑚礁在過去 50 年中已消失 <strong>50%</strong>。<h4>💡 真實案例</h4>帛琉在 2020 年將 <strong>80%</strong> 的海域設為禁漁區，成為全球海洋保護比例最高的國家之一。三年後，禁漁區內的魚類種群數量增加了 <strong>約 20%</strong>，同時帶動了生態旅遊收入增長。`,
+    15:`<h4>🌍 為什麼重要</h4>陸地生態系統提供人類食物、淡水、空氣淨化與氣候調節。生物多樣性的喪失是不可逆的，一旦消失就無法重建。<h4>📊 全球現況</h4>自 1970 年以來，全球野生動物種群數量平均下降了 <strong>69%</strong>。每年有 <strong>約 1,000 萬公頃</strong>的森林被砍伐，相當於每分鐘消失一個足球場大小的森林。<h4>💡 真實案例</h4>哥斯大黎加曾因大規模農業開發而失去 <strong>80%</strong> 的森林，透過生態旅遊收入補貼農民保育的「生態系服務付費」政策，在 30 年內使森林覆蓋率從 <strong>21%</strong> 回升至 <strong>54%</strong>。`,
+    16:`<h4>🌍 為什麼重要</h4>和平、公正的制度是所有發展的基礎。沒有法治與問責機制，任何社會投資都難以產生持久效益。<h4>📊 全球現況</h4>全球流離失所人數持續攀升。截至 2026 年 3 月，僅東非及南非（ESA）地區就有 <strong>2,360 萬</strong>名受關注人士，包括 560 萬難民與 1,700 萬境內流離失所者（IDPs）。蘇丹與剛果（DRC）的衝突是主因。<h4>💡 真實案例</h4>愛沙尼亞將超過 <strong>99%</strong> 的政府服務數位化，透明的數位基礎設施有效遏制貪腐，使愛沙尼亞成為全球最受信任的數位政府典範之一。`,
+    17:`<h4>🌍 為什麼重要</h4>全球挑戰沒有一個國家能單獨解決。氣候變遷、疫情、不平等——這些問題需要跨國、跨部門的真正合作，而非各自為政。<h4>📊 全球現況</h4>2023 年全球發展援助總額約 <strong>2,110 億美元</strong>，但距離實現 SDGs 的年度資金缺口估計高達 <strong>4 兆美元</strong>。許多高收入國家的發展援助仍低於承諾的 GDP <strong>0.7%</strong> 目標。<h4>💡 真實案例</h4>台灣透過「台灣模式」在邦交與非邦交國家分享農業、醫療、數位治理技術。在非洲、太平洋島國，台灣的農業技術合作計畫幫助超過 <strong>30 個</strong>國家提升糧食自給率，以小博大成為國際發展的重要夥伴。`
+  },
+  taiwan: {
+    1:`<h4>✅ 台灣做得好的地方</h4><strong>社會安全網</strong>覆蓋廣泛，包括低收入戶補助、急難救助金與兒少福利津貼。台灣的<strong>貧窮率</strong>（約 1-2%）遠低於全球平均。<h4>⚠️ 台灣面臨的挑戰</h4><strong>相對貧窮</strong>問題被絕對貧窮標準遮蔽——許多「非低收入戶」的家庭仍面臨嚴峻的生活壓力，尤其是單親家庭與身心障礙者。<strong>青貧</strong>問題日益嚴重，薪資成長趕不上房價與物價。<h4>🎯 優先解決</h4>建立更精準的<strong>相對貧窮線</strong>統計標準，讓政策能看見「窮但不夠窮」的族群，才能真正阻斷貧窮的世代傳遞。`,
+    2:`<h4>✅ 台灣做得好的地方</h4>台灣農業科技研發能力強，<strong>精準農業</strong>與設施農業技術全球領先。農委會推動的<strong>食農教育</strong>計畫讓民眾更了解在地食材。<h4>⚠️ 台灣面臨的挑戰</h4>台灣糧食自給率僅約 <strong>34%</strong>（熱量換算），高度依賴進口，在全球供應鏈危機時極為脆弱。極端氣候正讓農業生產愈來愈不穩定。<h4>🎯 優先解決</h4>提高<strong>糧食自給率</strong>，特別是增加大豆與小麥的本土生產，並建立完善的糧食儲備制度，降低地緣政治風險對台灣食安的衝擊。`,
+    3:`<h4>✅ 台灣做得好的地方</h4>台灣<strong>全民健保</strong>覆蓋率 99%，連續多年獲評全球最佳醫療體系。醫療可近性高，候診時間相對短，費用低廉。<h4>⚠️ 台灣面臨的挑戰</h4><strong>醫護人力</strong>嚴重短缺，基層診所與偏鄉醫療資源分布不均。<strong>高齡化</strong>速度是全球最快之一，長照體系尚未完全跟上需求。<h4>🎯 優先解決</h4>加快建立<strong>社區整合長照體系</strong>，讓老年人能在熟悉環境中老化，而非全部集中在醫院，同時減輕家庭照護壓力。`,
+    4:`<h4>✅ 台灣做得好的地方</h4>台灣的<strong>12年國教</strong>普及率高，高等教育入學率超過 <strong>70%</strong>。近年積極推動<strong>數位學習</strong>，建置線上學習平台與 AI 輔助教學工具。<h4>⚠️ 台灣面臨的挑戰</h4><strong>城鄉教育落差</strong>仍然明顯，偏鄉學校師資流動率高、資源不足。<strong>學歷通膨</strong>導致高學歷與就業市場需求脫節，大學生「畢業即失業」的焦慮普遍。<h4>🎯 優先解決</h4>改革<strong>教育資源分配制度</strong>，讓偏鄉學校獲得更多資源與更穩定的師資，同時讓教育內容與未來技能需求接軌。`,
+    5:`<h4>✅ 台灣做得好的地方</h4>台灣<strong>女性立委比例</strong>超過 40%，高於全球平均。行政院婦女權益促進委員會積極推動性別主流化政策。<h4>⚠️ 台灣面臨的挑戰</h4><strong>職場性別薪資差距</strong>約 14%，女性在高管職位的比例仍偏低。傳統社會期待讓女性承擔不成比例的<strong>家務與育兒</strong>責任，影響職涯發展。<h4>🎯 優先解決</h4>推動<strong>育嬰留停</strong>的男女共擔文化，讓父親真正參與育兒，才能從根本改變性別分工的不平等結構。`,
+    6:`<h4>✅ 台灣做得好的地方</h4>台灣自來水普及率超過 <strong>93%</strong>，水質檢測標準嚴格。水利署積極推動<strong>節水技術</strong>與再生水計畫。<h4>⚠️ 台灣面臨的挑戰</h4>台灣降雨分布極不均勻，<strong>旱澇交替</strong>問題嚴峻。2021 年的嚴重乾旱讓半導體產業用水危機浮上檯面。氣候變遷預計將使這個問題更加極端。<h4>🎯 優先解決</h4>加快建設<strong>再生水廠</strong>與水資源多元化供應體系，降低對傳統水庫與地下水的依賴，強化台灣應對氣候變遷的水安全韌性。`,
+    7:`<h4>✅ 台灣做得好的地方</h4>台灣宣示 <strong>2050 淨零轉型</strong>目標，太陽能與離岸風電裝置容量快速成長。<strong>綠電憑證</strong>制度讓企業得以購買再生能源。<h4>⚠️ 台灣面臨的挑戰</h4>電力結構仍高度依賴化石燃料（約 <strong>82%</strong>）。廢核政策引發電力穩定性爭議，尖峰用電壓力每年讓備用容量率亮紅燈。<h4>🎯 優先解決</h4>建立完善的<strong>電力儲能系統</strong>與智慧電網，才能讓間歇性的再生能源真正取代基載電力，而非只是補充角色。`,
+    8:`<h4>✅ 台灣做得好的地方</h4>台灣失業率長期維持在 <strong>3.7%</strong>左右，屬充分就業狀態。科技業薪資具國際競爭力，台積電等企業提供高品質工作機會。<h4>⚠️ 台灣面臨的挑戰</h4><strong>服務業薪資</strong>長期偏低，實質薪資成長停滯超過 20 年。<strong>青年低薪</strong>與高房價造成嚴重的世代剝奪感。<h4>🎯 優先解決</h4>建立<strong>最低工資定期調整機制</strong>，讓薪資成長與生產力、物價連動，並透過產業升級讓服務業從量的競爭走向質的提升。`,
+    9:`<h4>✅ 台灣做得好的地方</h4>台灣在<strong>半導體、ICT</strong>等產業的創新能力全球頂尖。新竹科學園區是亞洲最重要的科技創新聚落之一。<h4>⚠️ 台灣面臨的挑戰</h4><strong>創新生態系</strong>過度集中於大台北與新竹，南部與東部的產業發展相對落後。<strong>中小企業</strong>數位轉型能力與資金不足。<h4>🎯 優先解決</h4>建立<strong>區域均衡的創新基地</strong>，讓南部與東部也有足夠的基礎設施與人才資源，吸引投資並避免人才持續向北集中。`,
+    10:`<h4>✅ 台灣做得好的地方</h4>台灣的<strong>吉尼係數</strong>（約 0.34）相對於亞洲鄰國屬中等水準。<strong>全民健保</strong>與教育補貼實質上縮減了因健康與教育資源不均造成的差距。<h4>⚠️ 台灣面臨的挑戰</h4><strong>財富不平等</strong>遠比所得不平等嚴重，頂層 10% 擁有的資產比例持續上升。<strong>外籍移工</strong>受到的法律保護與本國勞工存在明顯差距。<h4>🎯 優先解決</h4>改革<strong>資本利得稅</strong>，讓財富的增值也能對社會有所回饋，而不是所有稅務負擔都落在靠薪水生活的受雇者身上。`,
+    11:`<h4>✅ 台灣做得好的地方</h4>台灣捷運系統覆蓋大台北地區，<strong>公共運輸</strong>使用率高。台北市的<strong>YouBike</strong>共享單車系統是全球最成功的微型移動案例之一。<h4>⚠️ 台灣面臨的挑戰</h4><strong>超高房價</strong>讓許多年輕人無力在工作地點附近居住，加劇通勤負擔。<strong>城鄉差距</strong>在交通、醫療與商業服務上仍然顯著。<h4>🎯 優先解決</h4>加大<strong>社會住宅</strong>的興建力道，並與大眾運輸節點整合，讓中低收入族群也能住在工作機會集中的地區，才能真正讓城市成為機會平等的場所。`,
+    12:`<h4>✅ 台灣做得好的地方</h4>台灣的<strong>資源回收率</strong>超過 55%，是全球最高之一。循環經濟政策推動廠商以「租賃」取代「銷售」的商業模式轉型。<h4>⚠️ 台灣面臨的挑戰</h4>台灣人均<strong>塑膠消費量</strong>在亞洲名列前茅。<strong>過度包裝</strong>問題在電商快速發展下愈來愈嚴重，減塑政策執行力道仍不足。<h4>🎯 優先解決</h4>建立<strong>EPR（延伸生產者責任）</strong>制度，讓企業為產品的整個生命週期負責，從源頭減少廢棄物，而非只依賴消費者端的回收行為。`,
+    13:`<h4>✅ 台灣做得好的地方</h4>台灣通過<strong>氣候變遷因應法</strong>，明定 2050 淨零排放目標，並建立<strong>碳費</strong>制度。再生能源建設速度明顯加快。<h4>⚠️ 台灣面臨的挑戰</h4>台灣每人<strong>碳排放量</strong>約 11 噸（全球平均 4.7 噸），偏高。<strong>工業部門</strong>（尤其是半導體）的電力需求龐大，使減碳目標面臨高度挑戰。<h4>🎯 優先解決</h4>提高<strong>碳費</strong>至真正反映碳的社會成本，讓市場機制驅動企業真正投入減碳，而非等待政府補貼才行動。`,
+    14:`<h4>✅ 台灣做得好的地方</h4>台灣設立多個<strong>海洋保護區</strong>，珊瑚礁生態調查技術全球領先。<strong>漁業署</strong>推動永續漁業認證，減少過度捕撈。<h4>⚠️ 台灣面臨的挑戰</h4>台灣漁船曾多次因<strong>強迫勞動</strong>問題被國際組織點名，損害台灣形象。<strong>海洋廢棄物</strong>問題在夏季颱風後特別嚴重。<h4>🎯 優先解決</h4>建立嚴格的<strong>漁業人權稽核</strong>機制，確保台灣遠洋漁業符合國際勞工標準，才能在國際市場上真正維護「台灣海鮮」的品牌形象。`,
+    15:`<h4>✅ 台灣做得好的地方</h4>台灣原住民族<strong>生態知識</strong>融入保育政策，國家公園體系完善。<strong>台灣黑熊</strong>等旗艦物種的保育工作受到國際肯定。<h4>⚠️ 台灣面臨的挑戰</h4><strong>山林違規開發</strong>與農藥使用問題持續威脅生態系完整性。<strong>外來入侵種</strong>（如埃及聖䴉、綠鬣蜥）的擴散尚未有效遏制。<h4>🎯 優先解決</h4>建立更嚴格的<strong>山坡地開發管制</strong>，並讓原住民族真正參與其傳統領域的保育治理，結合傳統生態知識與現代科學才能守護台灣的生物多樣性。`,
+    16:`<h4>✅ 台灣做得好的地方</h4>台灣有相對獨立的<strong>司法體系</strong>與活躍的公民社會，新聞自由在亞洲名列前茅。<strong>廉政署</strong>近年積極打擊貪腐案件。<h4>⚠️ 台灣面臨的挑戰</h4><strong>司法信任度</strong>偏低，民眾對判決公正性的疑慮尚未消除。<strong>政治極化</strong>現象在社群媒體時代加速，對話空間日益收窄。<h4>🎯 優先解決</h4>推動<strong>司法透明化改革</strong>，包括裁判書公開、法庭直播等措施，讓司法過程在公眾監督下運行，才能逐步重建民眾對司法體系的信任。`,
+    17:`<h4>✅ 台灣做得好的地方</h4>台灣以<strong>技術合作</strong>為核心的國際發展援助模式獲得廣泛肯定，在農業、醫療、ICT 領域協助超過 50 個國家。<h4>⚠️ 台灣面臨的挑戰</h4>台灣的<strong>邦交國</strong>僅剩 12 個，在許多國際多邊場合無法參與，影響政策倡議能力。<strong>官方發展援助</strong>（ODA）規模相對有限。<h4>🎯 優先解決</h4>在正式邦交之外，加強與<strong>非政府組織、學術機構</strong>的多軌外交，讓台灣的 SDGs 經驗與技術能透過非國家行為者渠道持續輸出，擴大影響力。`
+  },
+  data: {
+    1:[{num:"7億",label:"每天生活費<2.15美元的極端貧窮人口"},{num:"50%+",label:"極端貧窮人口集中於撒哈拉以南非洲"},{num:"1億",label:"COVID疫情新增的貧窮人口"},{num:"34%",label:"台灣糧食自給率（熱量換算）"}],
+    2:[{num:"7.35億",label:"全球面臨飢餓的人口數"},{num:"1/3",label:"全球食物生產在抵達餐桌前被浪費的比例"},{num:"30%",label:"採用Apollo Agriculture的農戶玉米增產幅度"},{num:"2030",label:"零飢餓目標年份，但進展嚴重落後"}],
+    3:[{num:"500萬",label:"每年五歲以下死於可預防疾病的兒童數"},{num:"127萬",label:"每年死於抗生素抗藥性的人數"},{num:"99%",label:"台灣全民健保覆蓋率"},{num:"1.5億",label:"可汗學院全球使用學生人數"}],
+    4:[{num:"3,078",label:"全球目前列為瀕危的語言數"},{num:"43%",label:"全球現存語言的瀕危比例"},{num:"1,431",label:"母語使用者少於千人的語言數"},{num:"90%",label:"2100年前預計消失的語言比例"}],
+    5:[{num:"6.5億",label:"在18歲前結婚的女性人數"},{num:"20%",label:"全球職場平均性別薪資差距"},{num:"14%",label:"台灣職場性別薪資差距"},{num:"40%+",label:"台灣女性立委比例"}],
+    6:[{num:"22億",label:"全球缺乏安全飲用水的人口"},{num:"36億",label:"每年至少一個月面臨嚴重缺水的人口"},{num:"90%+",label:"以色列廢水循環再利用率"},{num:"93%",label:"台灣自來水普及率"}],
+    7:[{num:"7.5億",label:"全球缺乏電力的人口"},{num:"90%",label:"2023年新增發電容量中再生能源佔比"},{num:"90%",label:"太陽能在十年內的成本下降幅度"},{num:"82%",label:"台灣電力結構中化石燃料佔比"}],
+    8:[{num:"14%",label:"全球青年失業率（成人3倍）"},{num:"8,500萬",label:"AI自動化在2030年前預計消失的工作數"},{num:"9,700萬",label:"AI同期預計創造的新工作數"},{num:"3.7%",label:"台灣失業率（全年平均）"}],
+    9:[{num:"15兆",label:"全球每年基礎建設投資缺口（美元）"},{num:"6億",label:"非洲缺乏可靠電力的人口數"},{num:"60%",label:"台積電全球晶圓代工市占率"},{num:"151兆",label:"全球未來基礎建設投資需求總額（美元）"}],
+    10:[{num:"1%",label:"擁有財富超過其餘99%的最富裕族群"},{num:"5兆",label:"疫情期間億萬富翁財富增加額（美元）"},{num:"0.25-0.30",label:"北歐國家基尼係數（全球最低）"},{num:"0.34",label:"台灣基尼係數"}],
+    11:[{num:"55%",label:"目前居住在城市的全球人口比例"},{num:"68%",label:"2050年預計都市化人口比例"},{num:"10億",label:"全球住在貧民窟的人口"},{num:"70%",label:"城市佔全球碳排放比例"}],
+    12:[{num:"20億噸",label:"全球每年產生的固體廢棄物"},{num:"34億噸",label:"2050年預計廢棄物量"},{num:"1/3",label:"全球食物系統佔溫室氣體排放比例"},{num:"55%",label:"台灣資源回收率（全球最高之一）"}],
+    13:[{num:"1.45°C",label:"2023年全球均溫較工業化前升幅"},{num:"43%",label:"2030年前碳排放需減少幅度（IPCC）"},{num:"11噸",label:"台灣人均年碳排放量"},{num:"4.7噸",label:"全球平均人均年碳排放量"}],
+    14:[{num:"1/3",label:"全球遭過度捕撈的魚類資源比例"},{num:"800萬噸",label:"每年流入海洋的塑膠廢棄物"},{num:"50%",label:"過去50年珊瑚礁消失比例"},{num:"80%",label:"帛琉設為禁漁區的海域比例"}],
+    15:[{num:"69%",label:"自1970年以來全球野生動物種群下降幅度"},{num:"1,000萬",label:"每年被砍伐的森林公頃數"},{num:"21%→54%",label:"哥斯大黎加森林覆蓋率30年變化"},{num:"30%",label:"全球「30x30」目標：2030年保護陸地比例"}],
+    16:[{num:"2,360萬",label:"2026年ESA地區流離失所總人數"},{num:"890萬",label:"蘇丹境內流離失所者(IDPs)"},{num:"200萬",label:"烏干達收容難民人數"},{num:"99%",label:"愛沙尼亞政府服務數位化比例"}],
+    17:[{num:"2,110億",label:"2023年全球發展援助總額（美元）"},{num:"4兆",label:"實現SDGs的年度資金缺口（美元）"},{num:"0.7%",label:"高收入國家承諾的ODA佔GDP目標"},{num:"50+",label:"台灣技術合作協助的國家數"}]
+  },
+  youth: {
+    1:`<h4>今天就能做</h4><ul class="action-list"><li>選擇購買「公平貿易」認證商品，確保生產者獲得合理報酬</li><li>捐出不再需要的衣物或書籍給社福機構，而非直接丟棄</li><li>了解並分享台灣的貧窮現況數據，讓身邊的人看見這個議題</li></ul><h4>進階參與</h4><ul class="action-list"><li>加入<strong>台灣世界展望會</strong>或<strong>家扶基金會</strong>的志工或助養計畫</li><li>參加<strong>社會企業</strong>相關競賽（如社企流iLab），用創業思維解決貧窮問題</li><li>關注並倡議<strong>基本收入</strong>與<strong>最低工資</strong>政策討論</li></ul>知識就是力量，而分享讓力量倍增。從今天開始，讓更多人看見不平等的存在。`,
+    2:`<h4>今天就能做</h4><ul class="action-list"><li>減少食物浪費：購買前先確認需求，吃多少買多少</li><li>選擇在地、當季食材，支持台灣農民並減少運輸碳排</li><li>了解「食物銀行」的存在，並考慮捐贈多餘的不易腐敗食品</li></ul><h4>進階參與</h4><ul class="action-list"><li>加入<strong>主婦聯盟合作社</strong>或<strong>好食機</strong>，支持永續農業</li><li>參與<strong>台灣食物銀行聯合會</strong>的志工服務</li><li>修習農業相關課程，或申請<strong>農村體驗計畫</strong>了解糧食生產現實</li></ul>每一餐都是投票，選擇你想看見的食物系統。`,
+    3:`<h4>今天就能做</h4><ul class="action-list"><li>學習<strong>急救技能</strong>（CPR、AED），在緊急時刻成為關鍵的第一反應者</li><li>關心身邊的心理健康，練習有效傾聽而非給予評斷</li><li>支持並參與<strong>捐血</strong>活動</li></ul><h4>進階參與</h4><ul class="action-list"><li>加入<strong>台灣世界衛生組織觀察員</strong>倡議行動，讓台灣重返國際衛生舞台</li><li>參加<strong>醫學院或衛福部</strong>舉辦的公衛志工或健康促進計畫</li><li>關注<strong>心理健康議題</strong>，推廣去污名化的心理衛生教育</li></ul>健康不只是沒有疾病，更是完整的身心靈福祉。`,
+    4:`<h4>今天就能做</h4><ul class="action-list"><li>擔任偏鄉學生的線上<strong>課業輔導志工</strong>，每週一小時就能改變一個孩子</li><li>把你不再需要的教科書或學習資源捐出，減少教育資源浪費</li><li>分享優質學習資源（可汗學院、Coursera等），讓更多人受益</li></ul><h4>進階參與</h4><ul class="action-list"><li>加入<strong>偏鄉教育非營利組織</strong>（如均一平台、誠致教育基金會）做志工</li><li>參加<strong>教育部學海計畫</strong>或<strong>海外服務學習</strong>，拓展國際視野</li><li>在學校推動<strong>SDGs 教育</strong>，把永續議題帶進課堂討論</li></ul>教育是你給出的最好禮物，也是你能從中獲得最多的東西。`,
+    5:`<h4>今天就能做</h4><ul class="action-list"><li>練習<strong>性別平等語言</strong>，避免強化刻板印象的表達方式</li><li>當目睹職場或校園中的性別歧視時，勇敢發聲或支持受害者</li><li>閱讀並分享台灣性別平等指數的相關數據與報告</li></ul><h4>進階參與</h4><ul class="action-list"><li>加入<strong>婦女新知基金會</strong>或<strong>台灣性別平等教育協會</strong>的倡議行動</li><li>參加<strong>WEF 全球青年領袖論壇</strong>的申請，在國際舞台倡議性別平等</li><li>在自己的社群推動<strong>薪資透明化</strong>討論，讓性別薪資差距成為不能迴避的議題</li></ul>改變從你所在的地方開始，從你所說的每一句話開始。`,
+    6:`<h4>今天就能做</h4><ul class="action-list"><li>養成<strong>節水習慣</strong>：縮短淋浴時間、關掉不必要的水龍頭</li><li>了解台灣的水資源現況，分享給身邊的人</li><li>減少購買瓶裝水，改用可重複使用的水瓶</li></ul><h4>進階參與</h4><ul class="action-list"><li>參與<strong>荒野保護協會</strong>或<strong>台灣水資源保育聯盟</strong>的河川保育活動</li><li>了解並倡議<strong>農業節水技術</strong>，農業用水佔台灣總用水約70%</li><li>關注<strong>水費結構改革</strong>，合理水價才能驅動節水行為</li></ul>水不會因為你不在意它就繼續存在，但會因為你的行動而延續。`,
+    7:`<h4>今天就能做</h4><ul class="action-list"><li>在家中評估是否能安裝<strong>太陽能板</strong>或切換綠電方案</li><li>減少不必要的電力消耗，養成隨手關燈、拔插頭的習慣</li><li>了解台灣能源轉型的現況與挑戰，形成有根據的意見</li></ul><h4>進階參與</h4><ul class="action-list"><li>參加<strong>台灣再生能源推動聯盟</strong>或<strong>地球公民基金會</strong>的能源倡議活動</li><li>申請<strong>能源相關實習</strong>（台電、離岸風電開發商等），從業界了解轉型挑戰</li><li>參與<strong>能源公民論壇</strong>，讓公民聲音進入能源政策決策</li></ul>每一度綠電，都是對未來的一次投票。`,
+    8:`<h4>今天就能做</h4><ul class="action-list"><li>了解自己未來想從事的工作是否符合<strong>體面工作</strong>標準，並學習勞動權益知識</li><li>如果兼職打工，確認自己的工作條件符合勞基法規定</li><li>支持提供公平薪資與友善職場的企業，用消費表達立場</li></ul><h4>進階參與</h4><ul class="action-list"><li>加入<strong>台灣青年勞動九五聯盟</strong>，參與青年勞動權益倡議</li><li>參加<strong>社會企業相關競賽</strong>，以商業模式創造有尊嚴的就業機會</li><li>關注<strong>AI與未來工作</strong>議題，培養不容易被自動化取代的核心能力</li></ul>你值得一份有尊嚴的工作，但要先知道自己的權利在哪裡。`,
+    9:`<h4>今天就能做</h4><ul class="action-list"><li>了解<strong>台灣科技產業</strong>的全球角色，思考自己在其中的可能位置</li><li>學習<strong>程式設計或資料分析</strong>，為進入科技創新領域做準備</li><li>關注偏鄉的<strong>數位落差</strong>問題，思考技術如何服務更多人</li></ul><h4>進階參與</h4><ul class="action-list"><li>參加<strong>AIT的科技合作計畫</strong>或<strong>TIER台灣創意工場</strong>的創業加速器</li><li>申請<strong>矽谷或以色列</strong>的科技實習，了解頂尖創新生態系</li><li>參與<strong>黑客松競賽</strong>，用技術解決社會問題</li></ul>技術本身是中立的，讓它服務誰，取決於造技術的人。`,
+    10:`<h4>今天就能做</h4><ul class="action-list"><li>了解台灣的<strong>所得分配</strong>現況，關注基尼係數與薪資中位數數據</li><li>在社群媒體上分享有關不平等的深度報導，對抗資訊同溫層</li><li>支持有<strong>公平薪資政策</strong>的企業，用消費影響市場</li></ul><h4>進階參與</h4><ul class="action-list"><li>加入<strong>台灣人權促進會</strong>或<strong>移民工文化發展協會</strong>，關注最邊緣族群的處境</li><li>參與<strong>稅制改革</strong>的公民審議，讓財富再分配成為政策議題</li><li>關注<strong>原住民族</strong>土地與經濟權利議題，支持轉型正義</li></ul>平等不是讓每個人起點一樣，而是讓每個人都有真正的機會。`,
+    11:`<h4>今天就能做</h4><ul class="action-list"><li>多利用<strong>大眾運輸</strong>與自行車，減少私家車使用</li><li>關心你所在社區的<strong>公共空間品質</strong>，參與鄰里會議表達意見</li><li>了解台灣的<strong>社會住宅政策</strong>，支持提供更多可負擔住宅的倡議</li></ul><h4>進階參與</h4><ul class="action-list"><li>參加<strong>都市更新</strong>或<strong>社區營造計畫</strong>，讓居民成為城市設計的主體</li><li>加入<strong>OURs 都市改革組織</strong>的倡議行動，關注居住正義</li><li>參與<strong>城市設計競賽</strong>，提出讓城市更永續、更包容的方案</li></ul>最好的城市，是每個人都有發言權的城市。`,
+    12:`<h4>今天就能做</h4><ul class="action-list"><li>實踐<strong>零廢棄</strong>生活：自備購物袋、餐具，拒絕不必要的包裝</li><li>學習<strong>修繕技能</strong>，讓物品壽命延長而非輕易丟棄</li><li>購買二手商品，給物品第二次生命</li></ul><h4>進階參與</h4><ul class="action-list"><li>加入<strong>台灣環境資訊協會</strong>的循環經濟倡議</li><li>參加<strong>Remake Hub</strong>或<strong>Refurnishing</strong>等循環設計平台的活動</li><li>在學校推動<strong>無塑行動</strong>或<strong>食物剩食減量</strong>計畫</li></ul>消費主義讓你覺得「擁有更多才會快樂」，但永續生活證明恰恰相反。`,
+    13:`<h4>今天就能做</h4><ul class="action-list"><li>計算自己的<strong>碳足跡</strong>（可用碳足跡計算機），了解個人影響最大的排放源</li><li>減少<strong>紅肉攝取</strong>，畜牧業是僅次於能源的碳排大戶</li><li>選擇<strong>搭乘大眾運輸或騎車</strong>取代自駕，尤其是短程移動</li></ul><h4>進階參與</h4><ul class="action-list"><li>加入<strong>青年氣候聯盟</strong>或<strong>350台灣</strong>的氣候倡議行動</li><li>參加<strong>聯合國COP青年代表</strong>的申請，在國際談判場合為青年發聲</li><li>在校園推動<strong>淨零承諾</strong>，讓你的學校成為氣候行動的示範場域</li></ul>氣候危機不是我們繼承的問題，是我們必須解決的使命。`,
+    14:`<h4>今天就能做</h4><ul class="action-list"><li>減少使用<strong>一次性塑膠</strong>，它們最終流入海洋</li><li>選擇有<strong>永續漁業認證</strong>（如 MSC）的海鮮，拒絕過度捕撈來源</li><li>參加<strong>海岸淨灘</strong>活動，也了解廢棄物從何而來</li></ul><h4>進階參與</h4><ul class="action-list"><li>加入<strong>台灣海洋環境教育促進會</strong>或<strong>黑潮海洋文教基金會</strong></li><li>參加<strong>水下攝影</strong>或<strong>珊瑚礁監測</strong>志工計畫，用科學記錄海洋變化</li><li>倡議台灣提高<strong>海洋保護區</strong>面積至 10% 的國際承諾</li></ul>海洋是地球的心臟，而它的健康取決於你今天的選擇。`,
+    15:`<h4>今天就能做</h4><ul class="action-list"><li>了解台灣本土的<strong>瀕危物種</strong>，以及你能如何在日常生活中減少對牠們的威脅</li><li>拒絕購買任何<strong>野生動植物</strong>製品，切斷非法貿易的需求端</li><li>在陽台或社區種植<strong>本土植物</strong>，為都市中的生物提供棲地</li></ul><h4>進階參與</h4><ul class="action-list"><li>加入<strong>特有生物研究保育中心</strong>的公民科學計畫，協助記錄台灣生物多樣性</li><li>參與<strong>荒野保護協會</strong>的棲地保育志工行動</li><li>關注並倡議<strong>原住民族傳統領域</strong>在保育政策中的主體地位</li></ul>地球不是我們從祖先那裡繼承的，是向孩子借來的。`,
+    16:`<h4>今天就能做</h4><ul class="action-list"><li>練習<strong>媒體識讀</strong>，不分享未經查證的資訊，減少假新聞擴散</li><li>了解台灣與全球的<strong>難民議題</strong>，形成有根據的人道立場</li><li>積極<strong>參與投票</strong>，選出支持民主法治的代表</li></ul><h4>進階參與</h4><ul class="action-list"><li>加入<strong>台灣人權促進會</strong>或<strong>國際特赦組織台灣分會</strong></li><li>參與<strong>模擬聯合國</strong>（MUN）活動，了解國際和平建設的複雜性</li><li>關注<strong>轉型正義</strong>議題，支持台灣社會面對歷史傷痕的修復過程</li></ul>民主不是理所當然的，它需要每一代人主動維護。`,
+    17:`<h4>今天就能做</h4><ul class="action-list"><li>了解台灣的<strong>國際處境</strong>，以及如何透過非官方管道參與國際社會</li><li>學習第二外語，成為跨文化溝通的橋樑</li><li>支持台灣的<strong>國際技術合作計畫</strong>，讓更多人了解台灣的貢獻</li></ul><h4>進階參與</h4><ul class="action-list"><li>申請<strong>外交替代役</strong>或<strong>ICDF海外志工</strong>，以行動參與國際發展</li><li>加入<strong>台灣學生聯合國協進會</strong>，擴大台灣青年在國際場域的參與</li><li>推動自己的學校與<strong>國際學校締結夥伴</strong>，從校園建立全球連結</li></ul>台灣的未來不只在島內，更在全球網絡中的每一個連結點。`
+  },
+  links: {
+    1:`<h4>🔗 正向連動</h4><span class="connection-tag">SDG 2 消除飢餓</span><span class="connection-tag">SDG 3 健康福祉</span><span class="connection-tag">SDG 4 優質教育</span><br><br>消除貧窮直接讓人能負擔食物、醫療與教育。研究顯示每減少1%的極端貧窮率，嬰兒死亡率約下降0.5%，學齡兒童就學率提升約0.8%。<h4>⚖️ 潛在衝突</h4><span class="connection-tag">SDG 8 體面工作</span><br><br>提高最低工資雖可減少貧窮，但過快調升可能使部分低技能就業機會消失，需要配套的職業訓練政策。<h4>💡 複雜性案例</h4>微型信貸曾被視為萬靈藥，但研究發現若缺乏配套教育與市場支援，部分借款人反而陷入債務循環，說明單一政策工具難以解決多面向的貧窮問題。`,
+    2:`<h4>🔗 正向連動</h4><span class="connection-tag">SDG 3 健康福祉</span><span class="connection-tag">SDG 13 氣候行動</span><span class="connection-tag">SDG 15 陸地生態</span><br><br>糧食安全與生態系健康緊密相連——森林保育確保水源與土壤，是農業永續的基礎。<h4>⚖️ 潛在衝突</h4><span class="connection-tag">SDG 15 陸地生態</span><br><br>擴大農業生產面積以解決飢餓問題，往往以砍伐森林為代價，產生直接的SDG取捨。<h4>💡 複雜性案例</h4>巴西為提高大豆產量而砍伐亞馬遜雨林，短期解決部分糧食與出口問題，但長期破壞碳儲存、水循環與生物多樣性，使全球暖化加速，最終反而威脅全球糧食安全。`,
+    3:`<h4>🔗 正向連動</h4><span class="connection-tag">SDG 1 消除貧窮</span><span class="connection-tag">SDG 4 優質教育</span><span class="connection-tag">SDG 8 體面工作</span><br><br>健康的人口能更有效地學習與工作——每投入1美元於基本衛生，估計帶來5.5美元的經濟回報。<h4>⚖️ 潛在衝突</h4><span class="connection-tag">SDG 9 產業創新</span><br><br>醫療科技創新（如昂貴的新藥）若缺乏配套的可近性政策，可能加深富國與窮國的健康不平等。<h4>💡 複雜性案例</h4>COVID-19 疫苗開發展示了SDG 17（全球夥伴關係）的潛力，但疫苗民族主義也暴露了當SDG 3與SDG 10發生衝突時，富裕國家往往優先選擇本國利益。`,
+    4:`<h4>🔗 正向連動</h4><span class="connection-tag">SDG 1 消除貧窮</span><span class="connection-tag">SDG 5 性別平等</span><span class="connection-tag">SDG 10 減少不平等</span><br><br>教育是最有效的社會流動工具——女性每多受一年教育，其收入平均提升10%，子女健康狀況也顯著改善。<h4>⚖️ 潛在衝突</h4><span class="connection-tag">SDG 8 體面工作</span><br><br>若教育擴張跑在產業升級前面，過多大學畢業生找不到匹配工作，反而造成人才浪費與社會不滿。<h4>💡 複雜性案例</h4>台灣在1980-90年代的「教育奇蹟」顯示教育如何驅動經濟發展，但2000年後的大學過量擴張又製造了高學歷低薪的困境，說明教育政策需要與勞動市場需求精密配合。`,
+    5:`<h4>🔗 正向連動</h4><span class="connection-tag">SDG 1 消除貧窮</span><span class="connection-tag">SDG 3 健康福祉</span><span class="connection-tag">SDG 8 體面工作</span><br><br>當女性獲得平等受教育機會，整個家庭與社會的健康、收入與教育水準都隨之提升——這是發展學中最有力的正向循環之一。<h4>⚖️ 潛在衝突</h4><span class="connection-tag">SDG 11 永續城市</span><br><br>都市化提升女性就業機會，但也常帶來缺乏社會支持網絡的困境，單打獨鬥的職業母親面臨更高壓力。<h4>💡 複雜性案例</h4>盧安達透過配額制讓女性進入國會，但研究也顯示若僅有代表性而缺乏實質賦權，「象徵性代表」可能讓人誤以為問題已解決，反而降低社會對真正改變的迫切感。`,
+    6:`<h4>🔗 正向連動</h4><span class="connection-tag">SDG 2 消除飢餓</span><span class="connection-tag">SDG 3 健康福祉</span><span class="connection-tag">SDG 15 陸地生態</span><br><br>清潔水源是農業、公共衛生與生態系的共同基礎——缺水地區的糧食生產效率最低、腹瀉疾病發生率最高。<h4>⚖️ 潛在衝突</h4><span class="connection-tag">SDG 9 產業創新</span><br><br>半導體等高科技產業用水量龐大，台灣2021年旱災清楚展示了產業用水與民生用水的競爭關係。<h4>💡 複雜性案例</h4>尼羅河水資源爭端（埃及、衣索比亞、蘇丹）說明水資源管理如何從SDG 6議題演變為SDG 16（和平正義）的地緣政治衝突，水的問題從來不只是水的問題。`,
+    7:`<h4>🔗 正向連動</h4><span class="connection-tag">SDG 13 氣候行動</span><span class="connection-tag">SDG 8 體面工作</span><span class="connection-tag">SDG 9 產業創新</span><br><br>再生能源轉型同時創造大量新就業機會，並帶動電池儲能、智慧電網等創新產業發展。<h4>⚖️ 潛在衝突</h4><span class="connection-tag">SDG 15 陸地生態</span><br><br>大型太陽能與風電場的土地需求可能與生態保育區衝突，台灣濕地生態vs.離岸風電的爭議就是典型案例。<h4>💡 複雜性案例</h4>德國能源轉型（Energiewende）展示了雄心壯志的代價：大量投資再生能源使電費高漲，對低收入家庭造成不成比例的負擔，暴露了SDG 7（可負擔）與SDG 10（減少不平等）之間的真實張力。`,
+    8:`<h4>🔗 正向連動</h4><span class="connection-tag">SDG 1 消除貧窮</span><span class="connection-tag">SDG 10 減少不平等</span><span class="connection-tag">SDG 9 產業創新</span><br><br>體面的工作機會是打破貧窮最直接的路徑，而產業創新則不斷創造新的就業類型。<h4>⚖️ 潛在衝突</h4><span class="connection-tag">SDG 12 永續消費</span><br><br>以低勞動成本驅動的出口導向經濟成長，往往建立在剝削勞工與過度消耗資源的基礎上，形成「成長但不永續」的矛盾。<h4>💡 複雜性案例</h4>孟加拉成衣業是最典型的案例：為全球快時尚供應鏈提供廉價勞動力，在SDG 8（就業）上取得成果，卻以可憐的薪資、惡劣的工安條件與環境污染為代價，製造了更多不平等。`,
+    9:`<h4>🔗 正向連動</h4><span class="connection-tag">SDG 8 體面工作</span><span class="connection-tag">SDG 11 永續城市</span><span class="connection-tag">SDG 17 全球夥伴</span><br><br>完善基礎設施是吸引投資、創造就業的前提，也是城市與國家連結全球經濟網絡的基礎。<h4>⚖️ 潛在衝突</h4><span class="connection-tag">SDG 10 減少不平等</span><br><br>基礎建設投資往往集中於已有一定發展基礎的地區（強者愈強），可能加劇區域不平等而非縮小差距。<h4>💡 複雜性案例</h4>中國一帶一路基礎建設投資在非洲與東南亞建設港口、鐵路，促進了SDG 9，但「債務陷阱」的疑慮讓受援國可能喪失戰略資產，在SDG 16（主權與制度）上付出代價。`,
+    10:`<h4>🔗 正向連動</h4><span class="connection-tag">SDG 1 消除貧窮</span><span class="connection-tag">SDG 4 優質教育</span><span class="connection-tag">SDG 16 和平正義</span><br><br>不平等與暴力衝突高度相關——研究顯示基尼係數每上升1個百分點，爆發內部衝突的風險增加約3%。<h4>⚖️ 潛在衝突</h4><span class="connection-tag">SDG 8 體面工作</span><br><br>過高的累進稅制雖可縮小差距，但可能降低高技能人才與企業的投資與工作意願，引發「效率vs.平等」的政策辯論。<h4>💡 複雜性案例</h4>斯堪地那維亞國家的高稅制+高福利模式成功維持低不平等與高創新，但當全球化讓資本輕易移動時，這個模式面臨前所未有的挑戰，顯示SDG 10的實現需要全球性的稅務協調（SDG 17）。`,
+    11:`<h4>🔗 正向連動</h4><span class="connection-tag">SDG 3 健康福祉</span><span class="connection-tag">SDG 13 氣候行動</span><span class="connection-tag">SDG 10 減少不平等</span><br><br>永續城市設計（步行、大眾運輸）同時改善空氣品質、減少碳排，並讓沒有車的低收入族群也能方便移動。<h4>⚖️ 潛在衝突</h4><span class="connection-tag">SDG 11 本身（仕紳化）</span><br><br>城市更新往往帶來仕紳化效應，原本居住在此的低收入居民因地租上漲而被迫遷離，在試圖讓城市「更好」的過程中製造了新的不平等。<h4>💡 複雜性案例</h4>台北101與信義計畫區的發展提升了城市形象（SDG 11），但也讓周邊地區房價快速攀升，排擠了原有居民，展示了都市發展中「誰的城市？」這個核心張力。`,
+    12:`<h4>🔗 正向連動</h4><span class="connection-tag">SDG 13 氣候行動</span><span class="connection-tag">SDG 14 海洋生態</span><span class="connection-tag">SDG 15 陸地生態</span><br><br>循環經濟模式同時減少碳排、降低廢棄物污染，為三個生態SDG提供協同效益。<h4>⚖️ 潛在衝突</h4><span class="connection-tag">SDG 8 體面工作</span><br><br>在消費主義拉動的經濟體中，若人們消費減少，與消費相關的就業也可能萎縮，引發「減少消費vs.維持就業」的兩難。<h4>💡 複雜性案例</h4>快時尚產業創造數以百萬計的工作機會（SDG 8），但其商業模式建立在「買了就丟」的消費文化上，是全球污染最嚴重的產業之一（SDG 12衝突），展示了現行消費模式的系統性矛盾。`,
+    13:`<h4>🔗 正向連動</h4><span class="connection-tag">SDG 7 可負擔能源</span><span class="connection-tag">SDG 11 永續城市</span><span class="connection-tag">SDG 14 海洋生態</span><br><br>氣候行動的核心——減少化石燃料——同時推動再生能源普及，並透過減少酸化保護海洋生態。<h4>⚖️ 潛在衝突</h4><span class="connection-tag">SDG 1 消除貧窮</span><br><br>對碳排放徵稅或限制化石燃料補貼，可能在短期增加能源成本，對依賴廉價能源的貧困家庭與開發中國家造成不成比例的衝擊。<h4>💡 複雜性案例</h4>法國「黃背心運動」（2018）起源於燃油稅上漲，揭示了氣候政策可能引發的社會反彈——中低收入郊區居民無法像城市居民一樣輕易改變交通方式，使SDG 13與SDG 10產生直接衝突。`,
+    14:`<h4>🔗 正向連動</h4><span class="connection-tag">SDG 2 消除飢餓</span><span class="connection-tag">SDG 13 氣候行動</span><span class="connection-tag">SDG 1 消除貧窮</span><br><br>健康的海洋生態系是全球食物鏈的基礎，也是最重要的碳匯之一。沿岸漁業更是數十億貧困人口的主要生計來源。<h4>⚖️ 潛在衝突</h4><span class="connection-tag">SDG 8 體面工作</span><br><br>設立漁業禁區保護海洋生態，但直接影響以捕魚為生的漁民生計，在保育與就業之間製造困境。<h4>💡 複雜性案例</h4>太平洋島國因海平面上升面臨滅國危機（SDG 13的後果），卻因碳排放量可忽略不計，在國際氣候談判中幾乎沒有議價能力，揭示了「最脆弱者最無話語權」的深層不正義。`,
+    15:`<h4>🔗 正向連動</h4><span class="connection-tag">SDG 2 消除飢餓</span><span class="connection-tag">SDG 6 清潔用水</span><span class="connection-tag">SDG 13 氣候行動</span><br><br>森林是最重要的碳匯與水源地，生物多樣性是農業授粉與抵抗病蟲害的關鍵，生態系服務支撐所有人類活動。<h4>⚖️ 潛在衝突</h4><span class="connection-tag">SDG 1 消除貧窮</span><br><br>土地對貧困農民而言既是生計來源，也是最容易犧牲的環境保護標的——在飢餓與森林保育之間的取捨，往往由最脆弱的人來承擔。<h4>💡 複雜性案例</h4>REDD+（減少開發中國家毀林與森林退化碳排放計畫）試圖透過補償森林保育來解決SDG 1與SDG 15的衝突，但資金流向、原住民族土地權利的保障方式仍存在大量爭議。`,
+    16:`<h4>🔗 正向連動</h4><span class="connection-tag">SDG 1 消除貧窮</span><span class="connection-tag">SDG 4 優質教育</span><span class="connection-tag">SDG 10 減少不平等</span><br><br>強大的法治制度減少貪腐、保護財產權，創造讓投資與發展能夠落地生根的基礎條件。<h4>⚖️ 潛在衝突</h4><span class="connection-tag">SDG 8 體面工作</span><br><br>在某些威權政體下，雖然缺乏民主制度，但靠著強力執行的反貪腐措施與集中資源的發展計畫，取得了短期的經濟成長（如部分東亞經濟體的發展歷程）。<h4>💡 複雜性案例</h4>緬甸2021年軍事政變打斷了民主發展進程，同時使多年的發展成果倒退——外資撤離、NGO撤出、衛生與教育體系瓦解，直接影響十餘個SDG的進展，說明和平是所有發展的前提。`,
+    17:`<h4>🔗 正向連動</h4><span class="connection-tag">SDG 所有目標</span><br><br>夥伴關係是達成所有其他16個SDG的enabler（催化劑）。資金、技術移轉、貿易規則——這些系統性條件決定了每個目標能否真正實現。<h4>⚖️ 潛在衝突</h4><span class="connection-tag">SDG 10 減少不平等</span><br><br>自由貿易協定（FTA）雖促進全球經濟整合，但若規則由強國主導，往往對弱小國家不利，在「全球夥伴關係」的名義下加劇了國際不平等。<h4>💡 複雜性案例</h4>COVID-19疫苗的國際分配困境是SDG 17最真實的考驗：富裕國家囤積疫苗，而貧困國家等待救援，展示了當「全球夥伴關係」遇上國家利益時，SDG 17有多難落實。`
+  }
+};
+
+// 靜態渲染函式（不呼叫 API）
+let currentSdg = null;
+
+function renderStaticTab(tabKey, sdg) {
+  const data = SDG_STATIC[tabKey];
+  if (!data) return '<div class="ai-generated-content">內容準備中...</div>';
+
+  if (tabKey === 'data') {
+    const blocks = data[sdg.num] || [];
+    const blockHtml = blocks.map((b, i) =>
+      `<div class="data-block" style="animation: cardSlideIn 0.5s ease backwards ${i * 0.1}s;"><div class="data-block-num">${b.num}</div><div class="data-block-label">${b.label}</div></div>`
+    ).join('');
+    return `<div class="data-blocks">${blockHtml}</div><p style="font-size:0.75rem;color:var(--text3);margin-top:12px;text-align:right;">※ 以上數據引用自 2023/2024 聯合國及相關國際組織統計報告</p>`;
+  }
+
+  const text = data[sdg.num] || '';
+  return `<div class="ai-generated-content">${text}</div>`;
+}
+
+document.getElementById('sdgs-grid').addEventListener('click', e => {
+  const card = e.target.closest('.sdg-card'); if(!card) return;
+  const sdg = SDG_DATA.find(s=>s.num===parseInt(card.dataset.sdgNum));
+  currentSdg = sdg;
+  document.getElementById('modal-num').textContent=`SDG ${sdg.num}`;
+  document.getElementById('modal-num').style.color=sdg.color;
+  document.getElementById('modal-name').textContent=sdg.name;
+  document.getElementById('modal-desc').textContent=sdg.desc;
+  document.querySelectorAll('.sdg-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelector('.sdg-tab[data-tab="overview"]').classList.add('active');
+  document.querySelectorAll('.tab-panel').forEach(p=>{p.classList.remove('active');p.innerHTML='';});
+  document.getElementById('tab-overview').classList.add('active');
+  document.getElementById('tab-overview').innerHTML = renderStaticTab('overview', sdg);
+  document.getElementById('sdg-modal-overlay').classList.add('active');
+  document.body.style.overflow='hidden';
+});
+
+document.querySelectorAll('.sdg-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    if(!currentSdg) return;
+    const key = tab.dataset.tab;
+    document.querySelectorAll('.sdg-tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    const panel = document.getElementById(`tab-${key}`);
+    panel.classList.add('active');
+    // 每次點擊都重新渲染，確保動畫能重新觸發
+    panel.innerHTML = renderStaticTab(key, currentSdg);
+  });
+});
+
+document.getElementById('sdg-modal-overlay').addEventListener('click', e=>{
+  if(e.target.id==='sdg-modal-overlay'){document.getElementById('sdg-modal-overlay').classList.remove('active');document.body.style.overflow='';}
+});
+document.getElementById('sdg-modal-close-btn').addEventListener('click',()=>{
+  document.getElementById('sdg-modal-overlay').classList.remove('active');document.body.style.overflow='';
+});
+
+// ═══════════════════════════════════════
+// REFUGEE MAP
+// ═══════════════════════════════════════
+let map;
+function initRefugeeMap() {
+  map = L.map('refugee-map',{zoomControl:true,scrollWheelZoom:false}).setView([20,20],2);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'©OpenStreetMap ©CartoDB',maxZoom:18}).addTo(map);
+
+  REFUGEE_DATA.forEach(r=>{
+    const size=r.color==='#E5243B'?30:r.color==='#FCC30B'?20:14;
+    const marker=L.circleMarker([r.lat,r.lng],{radius:size/2,fillColor:r.color,color:'rgba(255,255,255,0.3)',weight:1,fillOpacity:0.8}).addTo(map);
+    marker.on('click',()=>openRefugeeChat(r.persona));
+    marker.bindPopup(`<div style="font-family:'Noto Sans TC',sans-serif;min-width:180px"><div style="font-weight:700;font-size:1rem;margin-bottom:4px">${r.name}</div><div style="color:#E5243B;font-weight:600;margin-bottom:6px">流離失所：${r.count}人</div><div style="font-size:0.82rem;color:#444;margin-bottom:8px">${r.desc}</div><div style="font-size:0.78rem;color:#63b3ed;cursor:pointer" onclick="openRefugeeChat('${r.persona}')">💬 點擊與難民對話 →</div></div>`);
+  });
+}
+
+// ═══════════════════════════════════════
+// REFUGEE AI CHAT
+// ═══════════════════════════════════════
+let currentPersona = 'amir';
+let chatHistory = [];
+
+function openRefugeeChat(personaKey) {
+  currentPersona = personaKey || 'amir';
+  chatHistory = [];
+  renderPersona();
+  document.getElementById('refugee-chat-messages').innerHTML = '';
+  document.getElementById('refugee-chat-modal').classList.add('active');
+  document.body.style.overflow='hidden';
+  // Add greeting
+  const persona = REFUGEE_PERSONAS[currentPersona];
+  appendChatBubble('ai', persona.greeting);
+}
+
+function renderPersona() {
+  const persona = REFUGEE_PERSONAS[currentPersona];
+  document.getElementById('chat-avatar-circle').textContent = persona.flag;
+  document.getElementById('chat-avatar-circle').style.borderColor = persona.borderColor;
+  document.getElementById('chat-avatar-name').textContent = persona.name;
+  document.getElementById('chat-avatar-sub').textContent = persona.sub;
+  document.querySelectorAll('.persona-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.persona === currentPersona);
+  });
+}
+
+function appendChatBubble(type, text) {
+  const div = document.createElement('div');
+  div.className = `chat-bubble ${type}`;
+  div.textContent = text;
+  const container = document.getElementById('refugee-chat-messages');
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function appendThinking() {
+  const div = document.createElement('div');
+  div.className = 'chat-bubble ai thinking';
+  div.id = 'chat-thinking';
+  div.innerHTML = '<div class="dots"><span></span><span></span><span></span></div>';
+  document.getElementById('refugee-chat-messages').appendChild(div);
+  document.getElementById('refugee-chat-messages').scrollTop = 99999;
+  return div;
+}
+
+async function sendRefugeeMessage() {
+  const input = document.getElementById('refugee-input');
+  const msg = input.value.trim(); if(!msg) return;
+  input.value = '';
+  const sendBtn = document.getElementById('refugee-send-btn');
+  sendBtn.disabled = true;
+
+  appendChatBubble('user', msg);
+  chatHistory.push({role:'user', msg});
+
+  const thinking = appendThinking();
+  const persona = REFUGEE_PERSONAS[currentPersona];
+
+  // Build conversation context
+  const history = chatHistory.slice(-6).map(h=>`${h.role==='user'?'對方問':'你說'}：${h.msg}`).join('\n');
+  const prompt = `對話歷史：\n${history}\n\n對方剛剛問：${msg}\n\n請以 ${persona.name} 的身份回答，保持角色一致性，100-150字以內，用正體中文，語氣要真實自然。`;
+
+  const reply = await callGemini(prompt, persona.system, 400);
+  thinking.remove();
+  appendChatBubble('ai', reply);
+  chatHistory.push({role:'ai', msg:reply});
+  sendBtn.disabled = false;
+}
+
+function sendQuick(el) {
+  document.getElementById('refugee-input').value = el.textContent;
+  sendRefugeeMessage();
+}
+
+document.querySelectorAll('.persona-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    currentPersona = btn.dataset.persona;
+    chatHistory = [];
+    renderPersona();
+    document.getElementById('refugee-chat-messages').innerHTML='';
+    appendChatBubble('ai', REFUGEE_PERSONAS[currentPersona].greeting);
+  });
+});
+
+document.getElementById('refugee-chat-close').addEventListener('click',()=>{
+  document.getElementById('refugee-chat-modal').classList.remove('active');
+  document.body.style.overflow='';
+});
+
+document.getElementById('refugee-input').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendRefugeeMessage();}
+});
+
+// ═══════════════════════════════════════
+// LANGUAGE TREE
+// ═══════════════════════════════════════
+const treeSketch=(p)=>{
+  let leaves=[],fallingLeaves=[],treeDrawn=false,treeGraphics,stars=[],meteors=[];
+
+  function drawBranch(pg,x1,y1,angle,len,depth){
+    if(depth===0)return;
+    const x2=x1+p.cos(angle)*len,y2=y1+p.sin(angle)*len;
+    const w=p.map(depth,0,8,0.5,6),g=p.map(depth,0,8,80,40);
+    pg.stroke(g,p.map(depth,0,9,40,80),20,220);pg.strokeWeight(w);pg.line(x1,y1,x2,y2);
+    if(depth<=2){
+      for(let i=0;i<3;i++){
+        const lx=p.lerp(x1,x2,p.random(0.3,1)),ly=p.lerp(y1,y2,p.random(0.3,1));
+        leaves.push({
+          x:lx,y:ly,
+          size:p.random(4,10),
+          hue:p.random([40,80,120,160]), // 樹上葉子的顏色
+          alive:Math.random()>0.35,
+          fallSpeed:p.random(0.5,1.5),
+          fallAngle:p.random(-0.05,0.05),
+          vy:0,
+          vx:p.random(-0.3,0.3),
+          langData: LANGUAGES_DATA[p.floor(p.random(LANGUAGES_DATA.length))], // 儲存語言數據
+          rot: p.random(p.TWO_PI),
+          rotSpeed: p.random(-0.05, 0.05)
+        });
+      }
+    }
+    const spread=p.random(0.3,0.5),lenRatio=p.random(0.6,0.75);
+    drawBranch(pg,x2,y2,angle-spread,len*lenRatio,depth-1);
+    drawBranch(pg,x2,y2,angle+spread,len*lenRatio,depth-1);
+    if(depth>4)drawBranch(pg,x2,y2,angle+p.random(-0.1,0.1),len*lenRatio*0.8,depth-2);
+  }
+  function resetMeteor(m) {
+    m.x = p.random(p.width * 0.5, p.width); m.y = p.random(-50, p.height * 0.2);
+    m.vx = p.random(-5, -3); m.vy = p.random(2, 5);
+    m.len = p.random(20, 50); m.opacity = 0;
+    m.active = false; m.wait = p.random(150, 450);
+  }
+  p.setup=()=>{
+    const container=document.getElementById('tree-canvas-container');
+    const w=container.offsetWidth || 1060;
+    p.createCanvas(w,600).parent('tree-canvas-container'); 
+    p.angleMode(p.RADIANS);
+    for(let i=0;i<80;i++) stars.push({x:p.random(w),y:p.random(600),sz:p.random(0.5,1.8),op:p.random(50,150),tw:p.random(0.02,0.06),off:p.random(p.TWO_PI)});
+    for(let i=0;i<2;i++) { let m={}; resetMeteor(m); meteors.push(m); }
+    treeGraphics=p.createGraphics(w,600);treeGraphics.angleMode(p.RADIANS);
+    drawBranch(treeGraphics,p.width/2,p.height - 60,-p.HALF_PI,120,9); 
+    treeDrawn=true;
+    fallingLeaves=leaves.filter(l=>!l.alive).map(l=>({...l}));
+  };
+  p.draw=()=>{
+    if(!treeDrawn)return;
+    p.background(10,22,40);
+    // 背景星空
+    stars.forEach(s=>{
+      let a=s.op+p.sin(p.frameCount*s.tw+s.off)*60;
+      p.noStroke(); p.fill(220,235,255,a); p.circle(s.x,s.y,s.sz);
+    });
+    // 背景流星
+    meteors.forEach(m=>{
+      if(!m.active){
+        m.wait--; if(m.wait<=0){m.active=true; m.opacity=255;}
+      } else {
+        p.stroke(160,220,255,m.opacity); p.strokeWeight(1.2);
+        p.line(m.x, m.y, m.x - m.vx * 3, m.y - m.vy * 3);
+        m.x+=m.vx; m.y+=m.vy; m.opacity-=4;
+        if(m.opacity<=0 || m.x< -100 || m.y>p.height) resetMeteor(m);
+      }
+    });
+    p.image(treeGraphics,0,0);
+    let hovered = null;
+
+    // 取得即時幸福指數 (0-10)
+    const h = window.globalHappiness || 5.8;
+    // 根據幸福指數計算顏色權重：高幸福 = 高綠度，低幸福 = 高褐色
+    const greenVal = p.map(h, 0, 10, 80, 255);
+    const redVal = p.map(h, 0, 10, 160, 60);
+
+    leaves.filter(l=>l.alive).forEach(l=>{
+      p.push();
+      p.translate(l.x, l.y);
+      p.rotate(l.rot || 0);
+      p.noStroke();
+      // 動態顏色計算：保留原本的 hue 差異，但整體色調隨幸福感偏移
+      let r = redVal * (l.hue/120);
+      let g = greenVal * (l.hue/120);
+      p.fill(r, g, 100, 200);
+      // 樹上的葉子形狀
+      p.beginShape();
+      p.vertex(0, -l.size * 0.7);
+      p.bezierVertex(l.size * 0.4, -l.size * 0.3, l.size * 0.4, l.size * 0.3, 0, l.size * 0.7);
+      p.bezierVertex(-l.size * 0.4, l.size * 0.3, -l.size * 0.4, -l.size * 0.3, 0, -l.size * 0.7);
+      p.endShape(p.CLOSE);
+      p.pop();
+      if(p.dist(p.mouseX, p.mouseY, l.x, l.y) < l.size + 5) hovered = l;
+    });
+
+    fallingLeaves.forEach(l=>{
+      l.vy+=0.05;
+      l.y+=l.vy*l.fallSpeed;
+      l.rot += l.rotSpeed;
+      l.x+=l.vx+p.sin(p.frameCount*0.05 + l.y*0.1)*1.2;
+
+      if(l.y>p.height+20){
+        const source = p.random(leaves); // 隨機從樹上的一片葉子位置重新開始掉落
+        l.x = source.x;
+        l.y = source.y;
+        l.vy = 0;
+        l.vx = p.random(-0.3, 0.3);
+        l.rot = p.random(p.TWO_PI);
+      }
+      
+      p.push();
+      p.translate(l.x, l.y);
+      p.rotate(l.rot);
+      p.noStroke();
+      p.fill(redVal * 1.2, greenVal * 1.1, 60, 180); // 落下葉片也隨之變色
+      // 繪製葉子形狀
+      p.beginShape();
+      p.vertex(0, -l.size * 0.7); // Top point
+      p.bezierVertex(l.size * 0.4, -l.size * 0.3, l.size * 0.4, l.size * 0.3, 0, l.size * 0.7); // Right curve to bottom
+      p.bezierVertex(-l.size * 0.4, l.size * 0.3, -l.size * 0.4, -l.size * 0.3, 0, -l.size * 0.7); // Left curve back to top
+      p.endShape(p.CLOSE);
+      p.pop();
+      if(p.dist(p.mouseX, p.mouseY, l.x, l.y) < l.size + 5) hovered = l;
+    });
+
+    if(hovered){
+      p.fill(255, 240, 200); p.noStroke(); p.textSize(14); p.textAlign(p.CENTER);
+      p.text(`${hovered.langData.name}: ${hovered.langData.hello}`, p.mouseX, p.mouseY - 15);
+    }
+  };
+};
+
+// ═══════════════════════════════════════
+// GAMES
+// ═══════════════════════════════════════
+const gamesGrid=document.getElementById('games-grid');
+GAME_DATA.forEach((game,gi)=>{
+  const card=document.createElement('div');card.className='game-card';
+  card.innerHTML=`<div class="game-sdg-badge" style="background:${game.color}">SDG ${game.sdg}</div><div class="game-title">${game.title}</div><div class="game-desc">${game.desc}</div><button class="game-btn" data-game-index="${gi}">開始遊戲 →</button>`;
+  gamesGrid.appendChild(card);
+});
+
+let currentGame=null,currentQ=0,score=0;
+document.getElementById('games-grid').addEventListener('click',e=>{
+  const btn=e.target.closest('.game-btn');if(!btn)return;
+  currentGame=GAME_DATA[parseInt(btn.dataset.gameIndex)];currentQ=0;score=0;
+  document.getElementById('game-modal-overlay').classList.add('active');
+  document.body.style.overflow='hidden';renderQuestion();
+});
+
+function renderQuestion(){
+  const q=currentGame.questions[currentQ];
+  document.getElementById('game-score-display').textContent=`${currentGame.sdgName} ｜ 題目 ${currentQ+1}/${currentGame.questions.length} ｜ 得分：${score}`;
+  document.getElementById('game-question-text').textContent=q.q;
+  document.getElementById('game-options-container').innerHTML=q.options.map((opt,i)=>`<button class="game-option" data-option-index="${i}">${opt}</button>`).join('');
+  document.getElementById('game-feedback').className='game-feedback';
+  document.getElementById('game-next-btn').className='game-next';
+}
+
+document.getElementById('game-options-container').addEventListener('click',e=>{
+  const t=e.target.closest('.game-option');if(!t||t.disabled)return;
+  const q=currentGame.questions[currentQ];
+  document.querySelectorAll('.game-option').forEach(o=>o.disabled=true);
+  const idx=parseInt(t.dataset.optionIndex);
+  t.classList.add(idx===q.correct?'correct':'wrong');
+  if(idx===q.correct)score++;
+  const fb=document.getElementById('game-feedback');
+  fb.textContent=(idx===q.correct?'✅ 正確！':'❌ 答錯了。')+' '+q.explain;
+  fb.className='game-feedback show';
+  const nxt=document.getElementById('game-next-btn');
+  nxt.className='game-next show';
+  nxt.textContent=currentQ<currentGame.questions.length-1?'下一題 →':'查看結果';
+});
+
+document.getElementById('game-next-btn').addEventListener('click',()=>{
+  const nxt=document.getElementById('game-next-btn');
+  if(nxt.textContent==='關閉'){document.getElementById('game-modal-overlay').classList.remove('active');document.body.style.overflow='';return;}
+  currentQ++;
+  if(currentQ>=currentGame.questions.length){document.getElementById('game-question-text').textContent=`遊戲結束！得分：${score}/${currentGame.questions.length}`;nxt.textContent='關閉';}
+  else renderQuestion();
+});
+
+document.getElementById('game-modal-close-btn').addEventListener('click',()=>{
+  document.getElementById('game-modal-overlay').classList.remove('active');document.body.style.overflow='';
+});
+
+// ═══════════════════════════════════════
+// 2050 SIMULATOR
+// ═══════════════════════════════════════
+const simState = {energy:3,edu:65,refugee:4,lang:50,gender:5};
+window.globalHappiness = 5.8;
+let simChart;
+// 2026 真實數據基準 (歸一化 0-10): [環境, 貧窮, 教育, 文化, 幸福]
+const data2026 = [9.2, 9.1, 6.0, 10.0, 5.5]; 
+
+function initSimChart() {
+  const ctx = document.getElementById('sim-chart');
+  if(!ctx) return;
+  simChart = new Chart(ctx, {
+    type: 'radar',
+    data: {
+      labels: ['環境韌性', '消除貧窮', '教育平權', '文化多樣性', '社會幸福'],
+      datasets: [{
+        label: '2026 現況',
+        data: data2026,
+        backgroundColor: 'rgba(99, 179, 237, 0.2)',
+        borderColor: '#63b3ed',
+        borderWidth: 2,
+        pointRadius: 0
+      }, {
+        label: '2050 預測',
+        data: [0, 0, 0, 0, 0],
+        backgroundColor: 'rgba(79, 209, 197, 0.4)',
+        borderColor: '#4fd1c5',
+        borderWidth: 3,
+        pointBackgroundColor: '#4fd1c5'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: {
+        duration: 800,
+        easing: 'easeOutQuart'
+      },
+      scales: {
+        r: {
+          min: 0, max: 10,
+          ticks: { display: false, stepSize: 2 },
+          grid: { color: 'rgba(255,255,255,0.1)' },
+          angleLines: { color: 'rgba(255,255,255,0.1)' },
+          pointLabels: { color: '#94a3b8', font: { size: 11 } }
+        }
+      },
+      plugins: { legend: { position: 'bottom', labels: { color: '#e2e8f0', font: { size: 11 } } } }
+    }
+  });
+}
+
+const SCENARIOS = {
+  sustainable: {energy:9.5, edu:95, refugee:9, lang:180, gender:9},
+  green: {energy:10, edu:75, refugee:4, lang:70, gender:5},
+  balanced: {energy:3, edu:65, refugee:4, lang:50, gender:5},
+  economic: {energy:0.5, edu:40, refugee:1, lang:10, gender:2}
+};
+
+function applyScenario(type) {
+  const s = SCENARIOS[type];
+  if(!s) return;
+  
+  Object.assign(simState, s);
+  
+  Object.keys(s).forEach(key => {
+    const val = s[key];
+    const slider = document.getElementById(`sl-${key}`);
+    if(slider) slider.value = val;
+    const valEl = document.getElementById(`sv-${key}`);
+    if(valEl) {
+      const labels = {energy:`${val}%`,edu:`${val}%`,refugee:`${val}/10`,lang:val,gender:`${val}/10`};
+      valEl.textContent = labels[key];
+    }
+  });
+
+  document.querySelectorAll('.scenario-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('onclick').includes(`'${type}'`));
+  });
+
+  recalcMetrics();
+  document.getElementById('sim-narrative').style.display='none';
+}
+
+function resetSimulator() {
+  applyScenario('balanced');
+  showToast("✅ 已恢復至 2026 基準數值");
+}
+
+function updateSimValue(key, val) {
+  simState[key] = parseFloat(val);
+  const labels = {energy:`${val}%`,edu:`${val}%`,refugee:`${val}/10`,lang:val,gender:`${val}/10`};
+  document.getElementById(`sv-${key}`).textContent = labels[key];
+  document.querySelectorAll('.scenario-btn').forEach(b => b.classList.remove('active'));
+  recalcMetrics();
+}
+
+function recalcMetrics() {
+  const {energy,edu,refugee,lang,gender} = simState;
+
+  // 1. 全球升溫：主要受能源投資影響。基準 4.0°C 為低行動情境，高投資可趨近 1.5°C (IPCC 1.5度報告)
+  const temp = Math.max(1.5, (4.2 - (energy * 0.22) - (edu/100 * 0.5))).toFixed(1);
+
+  // 2. 教育指數：受普及率與性別平等影響 (SDG 4 & 5)
+  const eduIdx = Math.min(99, Math.round(40 + (edu/100 * 50) + (gender * 1.0)));
+
+  // 3. 極端貧窮：教育與性別平等可降低貧窮，但氣候升溫會造成額外經濟損失 (SDG 1 & 13)
+  const poverty = Math.max(2, Math.round(22 + (temp - 1.5) * 7 - (edu/100 * 22) - (gender * 1.5)));
+
+  // 4. 武裝衝突：資源爭奪（升溫）與不平等（性別/難民政策）是主因 (SDG 16)
+  const conflict = Math.max(0, Math.round(10 + (temp - 1.5) * 12 - (refugee * 2.5) - (gender * 2)));
+
+  // 5. 存活語言數：基礎為 7168，受保護政策與教育投資的正向影響
+  const langSurv = Math.min(7168, Math.round(3200 + (lang * 16) + (edu/100 * 800)));
+
+  // 6. 幸福指數：綜合指標，受貧窮、衝突負面影響，教育正面影響
+  const happy = Math.min(10, Math.max(0, parseFloat(((eduIdx/10 + (10 - poverty/10) + (10 - conflict/20)) / 2.5).toFixed(1))));
+
+  const tempColor = temp > 2.5 ? '#fc8181' : temp > 1.8 ? '#f6ad55' : '#4fd1c5';
+  document.getElementById('m-temp').textContent=`+${temp}°C`; document.getElementById('m-temp').style.color=tempColor;
+  document.getElementById('mf-temp').style.width=`${Math.min(100,(temp/4)*100)}%`; document.getElementById('mf-temp').style.background=tempColor;
+  document.getElementById('m-poverty').textContent=`${poverty}%`;
+  document.getElementById('mf-poverty').style.width=`${poverty}%`;
+  document.getElementById('m-edu').textContent=eduIdx;
+  document.getElementById('mf-edu').style.width=`${eduIdx}%`;
+  document.getElementById('m-lang').textContent=langSurv.toLocaleString();
+  document.getElementById('mf-lang').style.width=`${(langSurv/7168)*100}%`;
+  document.getElementById('m-conflict').textContent=conflict;
+  document.getElementById('mf-conflict').style.width=`${Math.min(100,conflict)}%`;
+  const happyColor = happy > 7 ? '#4fd1c5' : happy > 5 ? '#f6ad55' : '#fc8181';
+  document.getElementById('m-happy').textContent=happy; document.getElementById('m-happy').style.color=happyColor;
+  document.getElementById('mf-happy').style.background=happyColor;
+  document.getElementById('mf-happy').style.width=`${(happy/10)*100}%`;
+
+  if (simChart) {
+    const nTemp = Math.max(0, 10 - (parseFloat(temp) - 1.5) * 4);
+    const nPov = Math.max(0, 10 - (poverty / 10));
+    const nEdu = eduIdx / 10;
+    const nLang = (langSurv / 7168) * 10;
+    const nHappy = happy;
+    simChart.data.datasets[1].data = [nTemp, nPov, nEdu, nLang, nHappy];
+    simChart.update();
+  }
+  // 更新全域幸福感，讓語言小樹即時變色
+  window.globalHappiness = happy;
+}
+
+async function generateSimNarrative() {
+  const btn = document.getElementById('sim-generate-btn');
+  const btnText = document.getElementById('sim-generate-text');
+  const spinner = document.getElementById('sim-loading-spinner');
+
+  btn.disabled = true;
+  if(btnText) btnText.textContent = 'AI 推演中…';
+  if(spinner) spinner.style.display = 'inline-block';
+
+  const {energy,edu,refugee,lang,gender}=simState;
+  const temp = document.getElementById('m-temp').textContent;
+  const poverty = document.getElementById('m-poverty').textContent;
+  const happy = document.getElementById('m-happy').textContent;
+  const prompt = `你是一位具備人文關懷的未來觀察者。請根據以下 2050 年世界的參數，書寫一段充滿溫度的第一人稱敘事：
+- 再生能源投資：${energy}% GDP
+- 教育普及率：${edu}%
+- 難民整合開放度：${refugee}/10
+- 年度語言保護數量：${lang}
+- 性別平等指數：${gender}/10
+預測指標：全球升溫 ${temp}、極端貧窮率 ${poverty}、幸福指數 ${happy}
+
+請化身為一個具體的人物（請給予姓名、年齡、國籍），以第一人稱視角描述 2050 年某個早晨。
+不僅要描述科技景象，更要觸碰靈魂——描述窗外的空氣味道、耳邊響起的族語聲、或是心中那份不再焦慮的安穩感。請將 SDGs 的達成（或挑戰）轉化為生活中的微小幸福或堅毅的希望。
+
+要求：文字優美且富有詩意，約 300 字。重點在於「心理狀態」與「希望」。不要解釋參數，不要標題，直接從角色的呼吸與覺知開始說故事。`;
+
+  const narrative = await callGemini(prompt, '', 1200);
+  const narrativeDiv = document.getElementById('sim-narrative');
+  narrativeDiv.style.display='block';
+  narrativeDiv.style.animation = 'cardSlideIn 0.8s ease-out backwards';
+  narrativeDiv.innerHTML = `<span style="font-size:0.8rem;color:var(--accent);letter-spacing:0.1em;text-transform:uppercase;display:block;margin-bottom:12px;">🤖 AI 推演故事</span>${narrative.replace(/\n/g,'<br>')}`;
+  
+  if(spinner) spinner.style.display = 'none';
+  if(btnText) btnText.textContent = '🔄 重新推演這個世界的故事';
+  btn.disabled = false;
+}
+
+
+// ═══════════════════════════════════════
+// LAZY LOADING OBSERVERS
+// ═══════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  // Hero section 立即加載
+  new p5(heroSketch);
+
+  const lazyObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        if (id === 'hero') {
+          animateCount(document.getElementById('count-sdgs'),17,'');
+          animateCount(document.getElementById('count-refugees'),11730,'萬');
+          animateCount(document.getElementById('count-languages'),3078,'');
+        } else if (id === 'map-section') {
+          initRefugeeMap();
+        } else if (id === 'language-tree') {
+          new p5(treeSketch);
+        } else if (id === 'simulator') {
+          initSimChart();
+          recalcMetrics();
+        }
+        lazyObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  // 註冊觀察對象
+  ['hero', 'map-section', 'language-tree', 'simulator'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) lazyObserver.observe(el);
+  });
+});
+
+// ═══════════════════════════════════════
+// SCROLL ANIMATIONS
+// ═══════════════════════════════════════
+const observer=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting)e.target.classList.add('visible');});},{threshold:0.1});
+document.querySelectorAll('.fade-in').forEach(el=>observer.observe(el));
+
+// ═══════════════════════════════════════
+// NAV TOGGLE
+// ═══════════════════════════════════════
+const navToggle=document.querySelector('.nav-toggle'),navLinks=document.querySelector('.nav-links');
+if(navToggle&&navLinks){
+  navToggle.addEventListener('click',()=>navLinks.classList.toggle('active'));
+  navLinks.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>navLinks.classList.remove('active')));
+}
+
+// ═══════════════════════════════════════
+// SIM INFO MODAL
+// ═══════════════════════════════════════
+document.getElementById('sim-info-btn').addEventListener('click', () => {
+  document.getElementById('sim-info-modal-overlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+});
+document.getElementById('sim-info-close-btn').addEventListener('click', () => {
+  document.getElementById('sim-info-modal-overlay').classList.remove('active');
+  document.body.style.overflow = '';
+});
+document.getElementById('sim-info-modal-overlay').addEventListener('click', (e) => {
+  if (e.target.id === 'sim-info-modal-overlay') {
+    document.getElementById('sim-info-modal-overlay').classList.remove('active');
+    document.body.style.overflow = '';
+  }
+});
+
+// ═══════════════════════════════════════
+// TOAST ANIMATION
+// ═══════════════════════════════════════
+const style=document.createElement('style');
+style.textContent=`@keyframes fadeUp{from{opacity:0;transform:translate(-50%,10px);}to{opacity:1;transform:translate(-50%,0);}}`;
+document.head.appendChild(style);
+</script>
+</body>
+</html>
